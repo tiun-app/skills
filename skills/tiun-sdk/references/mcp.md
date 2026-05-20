@@ -1,6 +1,6 @@
-# Tiun MCP server
+# tiun MCP server
 
-The Tiun MCP server (`https://mcp.tiun.business`) gives agents read access to the user's tiun providers and products during integration. It replaces copy-paste of `snippetId` and `productId` strings with direct lookups against the dashboard.
+The tiun MCP server (`https://mcp.tiun.business`) gives agents read access to the user's tiun providers and products during integration. It replaces copy-paste of `snippetId` and `productId` strings with direct lookups against the dashboard.
 
 ## Detection
 

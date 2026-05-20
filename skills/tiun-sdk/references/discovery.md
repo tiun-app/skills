@@ -4,7 +4,7 @@ Before writing any tiun integration code, gather four pieces of information. Ask
 
 ## 0a. MCP availability
 
-The Tiun MCP server (`https://mcp.tiun.business`) exposes `get_providers` and `get_products` against the user's dashboard. Detect by checking your available tools.
+The tiun MCP server (`https://mcp.tiun.business`) exposes `get_providers` and `get_products` against the user's dashboard. Detect by checking your available tools.
 
 - **Present and authed** → use it to enumerate inventory in 0c.
 - **Present but unauthed** → prompt auth once; if declined, proceed in manual mode.

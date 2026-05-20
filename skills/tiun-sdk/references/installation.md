@@ -43,7 +43,7 @@ tiun.init({
 | `debug` | boolean | `false` | Enable console logging. |
 | `sandbox` | boolean | `false` | Test mode with simulated payments. The dashboard has a separate sandbox toggle; both must be aligned. |
 
-Do not pass `baseUrl` to `init()`. It is an internal-only field reserved for Tiun's own infrastructure (Rule 14 in `SKILL.md`). `sandbox: true` is the only public environment switch.
+Do not pass `baseUrl` to `init()`. It is an internal-only field reserved for tiun's own infrastructure (Rule 14 in `SKILL.md`). `sandbox: true` is the only public environment switch.
 
 ### NPM mode vs script-tag mode
 

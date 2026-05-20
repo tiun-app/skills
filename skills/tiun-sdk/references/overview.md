@@ -1,10 +1,10 @@
-# Tiun SDK: Overview
+# tiun SDK: Overview
 
-Tiun is a commercial backend platform that provides authentication, payments, and products through a single JavaScript SDK, so product teams do not have to build a backend, payment UI, or session/entitlement layer themselves.
+tiun is a commercial backend platform that provides authentication, payments, and products through a single JavaScript SDK, so product teams do not have to build a backend, payment UI, or session/entitlement layer themselves.
 
 Upstream documentation: https://docs.tiun.io (full LLM-friendly dump at https://docs.tiun.io/llms-full.txt).
 
-## What Tiun provides
+## What tiun provides
 
 - **Authentication.** Email + one-time passcode (OTP). Returning subscribers can receive OTPs via SMS to a registered phone number. No passwords.
 - **Subscription billing.** Recurring charges on fixed schedules (monthly, quarterly, yearly). Suited for SaaS and memberships.

@@ -50,7 +50,7 @@ The skill triggers automatically on imports of `@tiun/sdk`, calls like `tiun.ini
 
 ## MCP server
 
-Install the Tiun MCP server so agents can fetch your providers and products directly from your dashboard during integration. It backs the discovery step in `tiun-sdk` and gives agents live access to your account context (products, environments, sandbox state).
+Install the tiun MCP server so agents can fetch your providers and products directly from your dashboard during integration. It backs the discovery step in `tiun-sdk` and gives agents live access to your account context (products, environments, sandbox state).
 
 ### Universal config
 

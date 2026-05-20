@@ -78,7 +78,7 @@ When the MCP is present, ground questions in inventory ("you have a time-based p
 11. **Stay upstream-faithful.** All code examples must match https://docs.tiun.io. If a pattern isn't documented upstream (custom SSR wiring, multi-env setups, backend SDKs in other languages, etc.), point the user at the upstream docs rather than inventing a snippet.
 12. **Do not infer integration mode from `get_products` inventory.** Always confirm with the user (see "Step 0"). The list reports what *exists*; it does not report what the integrator *wants to build*.
 13. **Do not wrap SDK methods to add `isInitialized` / `waitForReady` guards.** `tiun.checkout`, `tiun.login`, `tiun.start`, `tiun.setContent`, and `tiun.logout` already call `ensureInitialized()` and `await this.waitForReady()` internally. Wrapper helpers around these methods are noise.
-14. **Do not pass `baseUrl` to `init()`.** It is an internal-only field reserved for Tiun's own infrastructure. Use `sandbox: true` for non-production environments; that is the only public environment switch.
+14. **Do not pass `baseUrl` to `init()`.** It is an internal-only field reserved for tiun's own infrastructure. Use `sandbox: true` for non-production environments; that is the only public environment switch.
 15. **Write runtime config to files the bundler actually loads.** `.env.example` is documentation and is never evaluated. Vite loads `.env` / `.env.local`; Next.js loads `.env.local` and requires the `NEXT_PUBLIC_*` prefix for client-exposed values; Nuxt loads via `runtimeConfig.public` in `nuxt.config.ts`. See `references/installation.md` for the per-host table.
 
 ## Minimal working example
