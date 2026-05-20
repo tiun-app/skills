@@ -2,6 +2,8 @@
 
 Use subscriptions when you need persistent user accounts and recurring revenue (SaaS, memberships).
 
+If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go back — pick the mode (subscription vs time-based) and gather identifiers before generating code.
+
 ## Flow
 
 1. Create subscription products in the dashboard. Each has a `productId` (e.g. `p-live-pro`).
@@ -26,6 +28,28 @@ Use subscriptions when you need persistent user accounts and recurring revenue (
 
 5. For returning users: call `tiun.login()` to open the login overlay. OTP is sent to their registered email (and SMS if configured).
 
+## Multi-tier products
+
+Real apps usually have more than one product. Use a const map so productIds are typed and discoverable:
+
+```javascript
+const TIUN_PRODUCTS = {
+  basic: 'p-basic',
+  pro:   'p-pro',
+};
+
+tiun.on('userChange', ({ isAuthenticated, user }) => {
+  if (!isAuthenticated) return showSignedOutUI();
+
+  if (user.productAccess.includes(TIUN_PRODUCTS.pro))   return showProUI();
+  if (user.productAccess.includes(TIUN_PRODUCTS.basic)) return showBasicUI();
+  return showUpgradePrompt();
+});
+
+document.querySelector('#buy-pro').onclick =
+  () => tiun.checkout({ productId: TIUN_PRODUCTS.pro });
+```
+
 ## Gating rules
 
 - **UI-level gating**: `user.productAccess.includes(productId)` is sufficient for showing/hiding UI.
@@ -33,6 +57,6 @@ Use subscriptions when you need persistent user accounts and recurring revenue (
 
 ## Common mistakes
 
-- **Calling `checkout()` before `ready`.** Wrap in `await tiun.waitForReady()` or do it inside the `ready` event.
+- **Wrapping `tiun.checkout` / `tiun.login` in helper functions that re-check `isInitialized` and `await waitForReady`.** These methods already do both internally. Call them directly from your event handler.
 - **Reading `tiun.user` once at mount.** Entitlements can change mid-session (upgrade, downgrade, renewal). Use `userChange` as the source of truth, not a one-shot read.
 - **Building custom payment forms.** The checkout overlay is hosted by tiun; do not reimplement card collection.

@@ -1,6 +1,6 @@
 # tiun Skills
 
-[Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) for building against the [tiun SDK](https://docs.tiun.io): auth and subscription billing in one JS library (`@tiun/sdk`).
+[Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) for building against the [tiun SDK](https://docs.tiun.io): auth and billing in one JS library (`@tiun/sdk`).
 
 ## Installing
 
@@ -33,28 +33,45 @@ gh skill install tiun-app/skills
 
 If you'd rather wire it up by hand, clone and copy `skills/tiun-sdk/` into your agent's skills directory:
 
-| Agent | Skill directory |
-|-------|-----------------|
-| Claude Code | `~/.claude/skills/` |
-| Cursor | `~/.cursor/skills/` |
-| OpenAI Codex | `~/.codex/skills/` |
-| Gemini CLI | `~/.gemini/skills/` |
+| Agent        | Skill directory     |
+| ------------ | ------------------- |
+| Claude Code  | `~/.claude/skills/` |
+| Cursor       | `~/.cursor/skills/` |
+| OpenAI Codex | `~/.codex/skills/`  |
+| Gemini CLI   | `~/.gemini/skills/` |
 
 ## Skills
 
-| Skill | Useful for |
-|-------|------------|
-| tiun-sdk | Wiring up `@tiun/sdk`: subscription gating with `userChange` and `productAccess`, hosted checkout/login, server-side verification, and framework setup for React, Vue, Nuxt, and Next.js |
+| Skill    | Useful for                                                                                                                                                                                                                                                                                                                                                            |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tiun-sdk | Wiring up `@tiun/sdk`: subscription gating with `userChange` and `productAccess`, time-based paywalls with `tiun.start()` and `paywallShow` / `paywallHide`, hosted checkout/login, server-side verification, and framework setup for vanilla JS, React, Vue 3, Nuxt, Next.js, Svelte, Solid, Astro, Angular, and mobile WebViews. Includes a mandatory discovery step before generating code. |
 
 The skill triggers automatically on imports of `@tiun/sdk`, calls like `tiun.init` / `tiun.checkout`, and questions about tiun products or entitlements.
 
-## MCP Servers
+## MCP server
 
-| Server | Purpose |
-|--------|---------|
-| tiun | Live access to tiun docs and account context (products, environments, sandbox state) |
+Install the Tiun MCP server so agents can fetch your providers and products directly from your dashboard during integration. It backs the discovery step in `tiun-sdk` and gives agents live access to your account context (products, environments, sandbox state).
 
-The MCP server is wired up in [`.mcp.json`](.mcp.json) and points at `https://mcp.tiun.business`.
+### Universal config
+
+```json
+{
+  "mcpServers": {
+    "tiun": {
+      "type": "http",
+      "url": "https://mcp.tiun.business"
+    }
+  }
+}
+```
+
+### Per client
+
+- **Claude Code:** the plugin marketplace install (`/plugin install tiun-sdk@tiun-sdk`) auto-wires the MCP via this repo's [`.mcp.json`](.mcp.json). To add manually: `claude mcp add tiun https://mcp.tiun.business --transport http` (verify the exact flag in your Claude Code version).
+- **Cursor:** Settings → MCP → Add new MCP server → paste the JSON block above. Or merge it into `~/.cursor/mcp.json`.
+- **OpenAI Codex / Gemini CLI / others:** paste the universal config above into the client's MCP config file. See the client's MCP documentation for the exact path.
+
+On first call, agents will prompt for authentication against `my.tiun.business`.
 
 ## Updating
 
@@ -69,4 +86,3 @@ gh skill update tiun-app/skills
 - [tiun docs](https://docs.tiun.io) ([LLM-friendly bundle](https://docs.tiun.io/llms-full.txt))
 - [tiun dashboard](https://my.tiun.business)
 - [Agent Skills spec](https://agentskills.io/specification)
-
