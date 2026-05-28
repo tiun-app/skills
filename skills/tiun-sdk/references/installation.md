@@ -15,7 +15,7 @@ For vanilla HTML/JS without a bundler, import the ESM build from a CDN:
 ```html
 <script type="module">
   import { tiun } from 'https://unpkg.com/@tiun/sdk/tiun.js';
-  tiun.init({ snippetId: 'YOUR_SNIPPET_ID' });
+  tiun.init({ snippetId: 'YOUR_SNIPPET_ID', language: 'en' });
 </script>
 ```
 
@@ -26,31 +26,57 @@ import { tiun } from '@tiun/sdk';
 
 tiun.init({
   snippetId: 'YOUR_SNIPPET_ID', // required, from my.tiun.business
-  language: 'en',               // optional, UI language, default 'en'
-  tone:     'formal',           // optional, 'formal' | 'informal'
-  debug:    false,              // optional, console logging
-  sandbox:  false,              // optional, test environment
+  language:  'en',              // 'en' | 'de' | 'fr' (case-insensitive)
+  tone:      'formal',          // 'formal' | 'informal'
+  debug:     false,             // console logging
+  sandbox:   false,             // target sandbox environment
+  onReady:   () => {},          // optional, same as tiun.on('ready', ...)
+  onError:   (err) => {},       // optional, same as tiun.on('error', ...)
 });
 ```
+
+`tiun.init()` is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
+
+The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 14 in `SKILL.md`).
 
 ### Config options
 
 | Option | Type | Default | Notes |
 |---|---|---|---|
-| `snippetId` | string | none | **Required.** From dashboard. |
-| `language` | string | `'en'` | UI language for hosted overlays. |
-| `tone` | `'formal'` \| `'informal'` | `'formal'` | Copy style in overlays. |
+| `snippetId` | string | — | **Required.** From dashboard; environment-specific. |
+| `language` | `'en' \| 'de' \| 'fr'` | `'en'` | UI language for hosted overlays. Case-insensitive. Unsupported values trigger a one-time console warning and fall back to `'en'`. |
+| `tone` | `'formal' \| 'informal'` | `'formal'` | Copy style in overlays. |
 | `debug` | boolean | `false` | Enable console logging. |
-| `sandbox` | boolean | `false` | Test mode with simulated payments. The dashboard has a separate sandbox toggle; both must be aligned. |
+| `sandbox` | boolean | `false` | Target sandbox environment (`true`) or live (default). Selects the API host automatically; the snippet ID must match the same environment. |
+| `onReady` / `onError` / `onUserChange` / ... | function | — | Optional event callbacks; equivalent to `tiun.on(...)`. |
 
-Do not pass `baseUrl` to `init()`. It is an internal-only field reserved for tiun's own infrastructure (Rule 14 in `SKILL.md`). `sandbox: true` is the only public environment switch.
+## NPM mode vs script-tag mode
 
-### NPM mode vs script-tag mode
+- **NPM mode** (covered above): you bundle `@tiun/sdk` and call `tiun.init({ snippetId, ... })`. This is the path documented in [docs.tiun.io](https://docs.tiun.io) and the default for modern JS apps.
+- **Script-tag mode** (legacy): the snippet is loaded by a `<script>` tag and the configuration is injected by the backend; call `tiun.init()` with no arguments. Useful for legacy server-rendered sites where the snippet is already integrated via a CMS or platform plugin.
 
-- **NPM mode** (covered above): you bundle `@tiun/sdk` and call `tiun.init({ snippetId, ... })`. Use this for modern JS apps.
-- **Script-tag mode** (legacy): the snippet is loaded by a `<script>` tag and the configuration is injected by the backend. Call `tiun.init()` with no arguments. Use this for legacy server-rendered sites where the snippet is already integrated via a CMS or platform plugin.
+> The script-tag path is not currently documented in the public docs. Confirm with tiun (`support@tiun.app`) before relying on it for a new integration; it remains here because legacy hosts still depend on it.
 
 Pick one. Mixing both leads to a double-loaded snippet and conflicting config.
+
+## Environments — live vs sandbox
+
+tiun runs **two fully independent parallel environments**: live (real customers and payments) and sandbox (simulated payments, separate catalog). Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, customers, and analytics. Nothing syncs between them.
+
+```javascript
+// Sandbox
+tiun.init({ snippetId: 'YOUR_SANDBOX_SNIPPET_ID', language: 'en', sandbox: true });
+
+// Live (default)
+tiun.init({ snippetId: 'YOUR_LIVE_SNIPPET_ID', language: 'en' });
+```
+
+The dashboard has a sandbox toggle that switches which environment you are viewing/editing. Keep the SDK's `sandbox` flag aligned with the dashboard view while you're working, or snippet IDs and product IDs will not line up with what the dashboard shows.
+
+**`localhost` handling:**
+
+- Live: `localhost` is **blocked**. Use live only from your registered production domains.
+- Sandbox: `localhost` is **enabled by default on any port** — no explicit registration needed. Most teams develop locally with `sandbox: true` and a sandbox snippet ID.
 
 ## Where to put `snippetId` per host
 
@@ -70,13 +96,11 @@ The `snippetId` is not a secret — it identifies an environment, not a user —
 
 ## Lifecycle
 
-- `tiun.init(config)`: call once on app start.
+- `tiun.init(config)`: call on app start. Idempotent.
 - `tiun.waitForReady()`: returns a Promise that resolves when the hosted snippet is loaded.
 - `tiun.destroy()`: tear down the instance. Only needed where the subtree can remount — see the lifecycle matrix in [frameworks.md](frameworks.md).
 - `tiun.isInitialized` / `tiun.isReady`: boolean status flags.
 
 ## Where to call `init`
 
-Always on the client, never on the server. Initialize once per page load. Re-initializing without `destroy()` is unsupported.
-
-See [frameworks.md](frameworks.md) for per-framework mount points and the full `destroy()` lifecycle matrix.
+Always on the client, never on the server. See [frameworks.md](frameworks.md) for per-framework mount points and the full `destroy()` lifecycle matrix.

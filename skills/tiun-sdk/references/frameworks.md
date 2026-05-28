@@ -11,7 +11,7 @@ Three primitives. Adapt the reactive primitive to your stack.
 ```javascript
 import { tiun } from '@tiun/sdk';
 
-tiun.init({ snippetId, sandbox });
+tiun.init({ snippetId, language: 'en', sandbox });
 
 const off = tiun.on('userChange', ({ isAuthenticated, user }) => {
   // push into useState / ref / signal / store / DOM
@@ -20,6 +20,8 @@ const off = tiun.on('userChange', ({ isAuthenticated, user }) => {
 // on teardown (conditional — see matrix):
 // off(); tiun.destroy();
 ```
+
+`language` is a closed enum: `'en' | 'de' | 'fr'`. Unsupported values trigger a one-time console warning and fall back to `'en'`. See [installation.md](installation.md).
 
 ## Per-framework adaptations
 
@@ -31,14 +33,14 @@ Initialize at the end of `<body>` or after `DOMContentLoaded`. Page reload tears
 <script type="module">
   import { tiun } from 'https://unpkg.com/@tiun/sdk/tiun.js';
 
-  tiun.init({ snippetId: 'YOUR_SNIPPET_ID' });
+  tiun.init({ snippetId: 'YOUR_SNIPPET_ID', language: 'en' });
 
   tiun.on('userChange', ({ isAuthenticated, user }) => {
     document.body.dataset.authed = String(isAuthenticated);
   });
 
   document.getElementById('buy').onclick =
-    () => tiun.checkout({ productId: 'p-pro' });
+    () => tiun.checkout({ productId: 'p-live-pro' });
 </script>
 ```
 
@@ -54,7 +56,7 @@ export function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    tiun.init({ snippetId: import.meta.env.VITE_TIUN_SNIPPET_ID });
+    tiun.init({ snippetId: import.meta.env.VITE_TIUN_SNIPPET_ID, language: 'en' });
     const off = tiun.on('userChange', (data) => setUser(data.user));
     return () => {
       off();
@@ -83,7 +85,7 @@ export function TiunProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<unknown>(null);
 
   useEffect(() => {
-    tiun.init({ snippetId: process.env.NEXT_PUBLIC_TIUN_SNIPPET_ID! });
+    tiun.init({ snippetId: process.env.NEXT_PUBLIC_TIUN_SNIPPET_ID!, language: 'en' });
     const off = tiun.on('userChange', (data) => setUser(data.user));
     return () => {
       off();
@@ -122,7 +124,7 @@ const isAuthenticated = ref(false);
 const user = ref(null);
 
 onMounted(() => {
-  tiun.init({ snippetId: import.meta.env.VITE_TIUN_SNIPPET_ID });
+  tiun.init({ snippetId: import.meta.env.VITE_TIUN_SNIPPET_ID, language: 'en' });
   tiun.on('userChange', (data) => {
     isAuthenticated.value = data.isAuthenticated;
     user.value = data.user;
@@ -143,7 +145,7 @@ import { tiun } from '@tiun/sdk';
 
 export default defineNuxtPlugin(() => {
   const { tiunSnippetId } = useRuntimeConfig().public;
-  tiun.init({ snippetId: tiunSnippetId as string });
+  tiun.init({ snippetId: tiunSnippetId as string, language: 'en' });
   return { provide: { tiun } };
 });
 ```
@@ -176,7 +178,7 @@ Init in root `+layout.svelte`'s `onMount`. Expose a writable store other compone
   import { PUBLIC_TIUN_SNIPPET_ID } from '$env/static/public';
 
   onMount(() => {
-    tiun.init({ snippetId: PUBLIC_TIUN_SNIPPET_ID });
+    tiun.init({ snippetId: PUBLIC_TIUN_SNIPPET_ID, language: 'en' });
     tiun.on('userChange', (data) => tiunUser.set(data.user));
   });
 </script>
@@ -196,7 +198,7 @@ export function App() {
   const [user, setUser] = createSignal(null);
 
   onMount(() => {
-    tiun.init({ snippetId: import.meta.env.VITE_TIUN_SNIPPET_ID });
+    tiun.init({ snippetId: import.meta.env.VITE_TIUN_SNIPPET_ID, language: 'en' });
     tiun.on('userChange', (data) => setUser(data.user));
   });
 
@@ -216,13 +218,13 @@ const snippetId = import.meta.env.PUBLIC_TIUN_SNIPPET_ID;
 <script define:vars={{ snippetId }}>
   import { tiun } from '@tiun/sdk';
 
-  tiun.init({ snippetId });
+  tiun.init({ snippetId, language: 'en' });
   const off = tiun.on('userChange', () => {
     // update DOM
   });
 
   document.getElementById('buy').onclick =
-    () => tiun.checkout({ productId: 'p-pro' });
+    () => tiun.checkout({ productId: 'p-live-pro' });
 
   window.addEventListener('beforeunload', () => {
     off();
@@ -244,7 +246,7 @@ export class TiunService {
   readonly user = signal<unknown>(null);
 
   constructor() {
-    tiun.init({ snippetId: 'YOUR_SNIPPET_ID' });
+    tiun.init({ snippetId: 'YOUR_SNIPPET_ID', language: 'en' });
     tiun.on('userChange', (data) => this.user.set(data.user));
   }
 }
@@ -259,7 +261,7 @@ The SDK runs **inside** the WebView. The native shell does not call the SDK dire
 ```javascript
 import { tiun } from '@tiun/sdk';
 
-tiun.init({ snippetId: window.TIUN_SNIPPET_ID });
+tiun.init({ snippetId: window.TIUN_SNIPPET_ID, language: 'en' });
 
 window.getTiunVerification = async () => {
   const token = await tiun.getUserVerificationToken();

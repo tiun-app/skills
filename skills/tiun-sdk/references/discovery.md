@@ -4,7 +4,7 @@ Before writing any tiun integration code, gather four pieces of information. Ask
 
 ## 0a. MCP availability
 
-The tiun MCP server (`https://mcp.tiun.business`) exposes `get_providers` and `get_products` against the user's dashboard. Detect by checking your available tools.
+The tiun MCP server (`https://mcp.tiun.business/`) exposes `get_providers` and `get_products` against the user's dashboard. Detect by checking your available tools.
 
 - **Present and authed** → use it to enumerate inventory in 0c.
 - **Present but unauthed** → prompt auth once; if declined, proceed in manual mode.
@@ -31,32 +31,45 @@ Suggested question (when ambiguous):
 
 Questions depend on mode and MCP availability.
 
+### Environments: live and sandbox are independent parallel setups
+
+tiun runs two independent environments. Each has:
+
+- Its own snippet ID
+- Its own product catalog (sandbox products do not exist in live and vice versa)
+- Its own product ID prefix: `p-test-...` for sandbox, `p-live-...` for live
+- Its own API keys (for server-side verification)
+
+`localhost` is blocked in live. Local development needs `sandbox: true` plus a sandbox snippet ID. Production deploys use live (no `sandbox` flag, live snippet ID, `p-live-...` product IDs).
+
+Confirm with the user *which* environment you're wiring — if both exist, default to sandbox for new local-dev scaffolding and ask only when ambiguous.
+
 ### Subscription, MCP present
 
-1. List providers → ask user to pick (mark sandbox flag per provider).
-2. List products for chosen provider → ask user to pick one or multiple tiers. Suggest: "for multiple tiers, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-basic', pro: 'p-pro' }`."
-3. Confirm sandbox/prod from the provider's `sandbox` flag.
+1. List providers → ask user to pick (each provider is tagged sandbox or live).
+2. List products for chosen provider → ask user to pick one or multiple tiers. Suggest: "for multiple tiers, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-live-basic', pro: 'p-live-pro' }`."
+3. Confirm the environment from the provider tag; default to sandbox if both exist and the context is local dev.
 
 ### Subscription, no MCP
 
 1. Ask for `snippetId` (from `my.tiun.business`).
 2. Ask: one product or multiple tiers?
 3. For each tier: ask the `productId` and a label (e.g. `pro = p-live-pro`).
-4. Ask sandbox/prod.
+4. Ask which environment (live or sandbox). The product-ID prefix is a strong hint — `p-test-...` ⇒ sandbox, `p-live-...` ⇒ live.
 
 ### Time-based, MCP present
 
-1. List providers → ask user to pick (mark sandbox flag).
-2. Confirm sandbox/prod from the provider's `sandbox` flag.
+1. List providers → ask user to pick (sandbox vs live tag visible).
+2. Confirm environment from provider tag.
 
 ### Time-based, no MCP
 
 1. Ask for `snippetId`.
-2. Ask sandbox/prod.
+2. Ask which environment (live or sandbox).
 
 When MCP is present, ground questions in inventory:
 
-> You have one time-based product (`t-xxx`) and no subscription products. Should I wire up the existing time-based flow, or set up subscription products first (you'd create them in the dashboard, then I'd wire them in)?
+> You have a time-based product `p-test-xyz` in your sandbox and no live products yet. Should I wire up sandbox time-based for local dev, or set up live products first?
 
 ## 0d. Gating scope
 
@@ -74,7 +87,7 @@ Parse the user's prompt for any of the four answers before asking. Examples:
 |---|---|
 | "Add tiun" | None — ask all four |
 | "Wire up subscription for my video routes" | Skip 0b + the gating-target part of 0d; ask 0a, 0c, and the rest of 0d |
-| "Wire up subscription with product `p-pro` in sandbox to gate `/watch/*`" | Skip Step 0 entirely — fully specified |
+| "Wire up subscription with product `p-live-pro` to gate `/watch/*`" | Skip Step 0 entirely — fully specified (live inferred from the `p-live-` prefix) |
 | "Add a time-based paywall to my articles" | Skip 0b + most of 0d; ask 0a, 0c, and UX details for unauthed users |
 
-Confirmation is faster than open questions when you have a defensible default — e.g. "I see this is local dev; I'll use sandbox. OK?" beats "Sandbox or production?"
+Confirmation is faster than open questions when you have a defensible default — e.g. "I see you're running locally; I'll use sandbox. OK?" beats "Sandbox or live?"

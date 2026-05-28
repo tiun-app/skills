@@ -1,48 +1,131 @@
 # Server-Side Verification
 
-Trust nothing the client sends about its own entitlements. When access must be trusted (paid API endpoints, protected downloads, etc.), verify on the server.
+Trust nothing the client sends about its own entitlements. When access must be trusted (paid API endpoints, protected downloads, premium content payloads), verify on the server.
 
-## JWT pattern
+There are two verification flows, depending on the product type:
 
-1. On the frontend, call:
+- **User verification** — identity + subscription entitlements. JWT-based. Use for subscription gating and authenticated-only endpoints.
+- **Session verification** — time-based billing sessions. Session-ID-based. Use to confirm an active time-based session before serving premium content.
+
+Both use the same set of API keys (created in the dashboard under **APIs → Create new key**) and the same per-environment base URLs.
+
+## Base URLs and API keys
+
+| Environment | Base URL                       |
+|---|---|
+| Live        | `https://api.tiun.live`        |
+| Sandbox     | `https://api-sandbox.tiun.live`|
+
+API keys are environment-specific — sandbox keys do not work against live and vice versa. Use the base URL and key matching the SDK's `sandbox` flag (`sandbox: true` → sandbox URL + sandbox key). The `X-TIUN-API-KEY` value is a server secret; never expose it to the browser.
+
+## User verification (auth + subscriptions)
+
+JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. Do not cache verification results past the token's lifetime; the frontend can fetch a fresh token whenever you need one.
+
+### Flow
+
+1. On the frontend, fetch a verification token:
 
    ```javascript
    const token = await tiun.getUserVerificationToken();
    ```
 
-2. Send the token to your backend.
-3. On the backend, exchange the token for a verification result by POSTing to the tiun **UserVerification** endpoint:
+2. Send the token to your backend. The transport between your frontend and your backend is up to you — `Authorization: Bearer <token>` is a fine convention.
+3. On the backend, exchange the token with the tiun **UserVerification** endpoint:
 
    ```
-   POST https://api.tiun.live/live_api/s2s/v1/users/verification
-   X-ACCESS-TOKEN: <your s2s access token from the dashboard>
+   POST {BASE_URL}/live_api/s2s/v1/users/verification
+   X-TIUN-API-KEY: <your API key from the dashboard>
    Content-Type: application/json
 
    { "userVerificationToken": "<token from the frontend>" }
    ```
 
-   Response (200):
+   Response codes:
+
+   | Status | Meaning |
+   |---|---|
+   | `200`  | User object returned — read the body. |
+   | `401`  | The API key is invalid. |
+
+   `200` response body:
 
    ```json
    {
      "isAuthenticated": true,
      "userInfo": {
-       "userId": "...",
-       "email": "...",
+       "userId": "u-...",
+       "email": "user@example.com",
        "productAccess": ["p-live-pro"]
      }
    }
    ```
 
-   On 401, treat the request as unauthenticated. Full schema: https://api.tiun.live/live_api/swagger/tiun_live_public/swagger.json.
+4. Authorize the request based on `isAuthenticated` and `userInfo.productAccess`, not on anything else the client sent. A `200` with `isAuthenticated: false` means the API key was accepted but the underlying user session is no longer active — treat as unauthenticated.
 
-4. Authorize the request based on `userInfo.productAccess`, not on anything else the client sent.
+### Multiple plans
 
-The token is short-lived. Don't cache verification results past its lifetime; the frontend can re-fetch via `getUserVerificationToken()` whenever you need a fresh one. The `X-ACCESS-TOKEN` is a server secret. Never expose it to the browser.
+If you offer tiers, check from the highest applicable tier down:
+
+```javascript
+const hasPro   = user.userInfo?.productAccess?.includes('p-live-pro');
+const hasLight = user.userInfo?.productAccess?.includes('p-live-light');
+
+if (hasPro) {
+  // serve full Pro content
+} else if (hasLight) {
+  // serve Light content
+} else {
+  // no qualifying subscription → reject (prompt upgrade)
+}
+```
+
+## Session verification (time-based)
+
+When `paywallHide` fires, its payload includes a `sessionId`. Send it to your backend on protected requests, and call the **Session** endpoint to confirm the session is still valid before serving premium content.
+
+```
+PATCH {BASE_URL}/live_api/s2s/v1/sessions/{sessionId}/status
+X-TIUN-API-KEY: <your API key>
+```
+
+Response codes:
+
+| Status | Meaning |
+|---|---|
+| `200`  | Session is valid — serve the content. |
+| `404`  | Session is invalid, expired, or the user is out of funds. Deny. |
+| `401`  | API key is invalid. |
+
+Backend sketch:
+
+```javascript
+app.get('/api/premium-content', async (req, res) => {
+  const sessionId = req.headers['x-session-id'];
+  if (!sessionId) return; // missing → deny
+
+  const upstream = await fetch(
+    `${BASE_URL}/live_api/s2s/v1/sessions/${sessionId}/status`,
+    {
+      method: 'PATCH',
+      headers: { 'X-TIUN-API-KEY': API_KEY },
+    },
+  );
+
+  if (upstream.status === 200) {
+    // valid → serve the premium content
+  } else {
+    // 404 / 401 / upstream error → deny (fail closed)
+  }
+});
+```
 
 ## Do / Don't
 
-- **Do** treat the client as untrusted. `user.productAccess` on the client is fine for UI, never for authorization.
-- **Do** fail closed. Reject requests when the token or session cannot be validated.
-- **Don't** cache verification results beyond the token's/session's lifetime.
-- **Don't** expose the snippet ID as a secret. It is public and identifies the environment, not the user.
+- **Do** treat the client as untrusted. `user.productAccess` and `paywallHide` on the client are fine for UI, never for authorization.
+- **Do** fail closed. Reject when the token or session cannot be validated.
+- **Do** keep environments consistent: SDK `sandbox: true` → sandbox base URL + sandbox API key. Mixing produces silent 401s.
+- **Don't** cache verification results past the JWT's 5-minute lifetime, or past a session's `Active` window.
+- **Don't** expose the snippet ID or the `X-TIUN-API-KEY` as the same secret. The snippet ID is public and identifies an environment; the API key is a server secret.
+
+Full upstream API schema: [api.tiun.live/live_api/swagger/tiun_live_public/swagger.json](https://api.tiun.live/live_api/swagger/tiun_live_public/swagger.json).

@@ -6,20 +6,20 @@ If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go
 
 ## Flow
 
-1. Create subscription products in the dashboard. Each has a `productId` (e.g. `p-live-pro`).
-2. `tiun.init({ snippetId })` on app start.
+1. Create subscription products in the dashboard. Each has a `productId` (`p-live-...` for live, `p-test-...` for sandbox).
+2. `tiun.init({ snippetId, language: 'en' })` on app start.
 3. On the pricing page, bind checkout:
 
    ```javascript
    tiun.checkout({ productId: 'p-live-pro' });
    ```
 
-   This opens the hosted checkout overlay. After success, tiun fires `login` (if the user was new) and `userChange`.
+   This opens the hosted checkout overlay. After success, tiun fires `userChange` with `event: 'checkout'` (and `login` if the user was new).
 
 4. Subscribe to `userChange` to drive the UI:
 
    ```javascript
-   tiun.on('userChange', ({ isAuthenticated, user }) => {
+   tiun.on('userChange', ({ event, isAuthenticated, user }) => {
      if (!isAuthenticated) return showSignedOutUI();
      const hasPro = user.productAccess.includes('p-live-pro');
      hasPro ? showProUI() : showFreeUI();
@@ -28,14 +28,44 @@ If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go
 
 5. For returning users: call `tiun.login()` to open the login overlay. OTP is sent to their registered email (and SMS if configured).
 
+## Branching on `userChange.event`
+
+The `event` field tells you what triggered the fire (`'init' | 'login' | 'checkout' | 'logout' | 'update'`). Most gating logic does not need it — `isAuthenticated` + `productAccess` are enough. Branch when you want one-off side effects:
+
+```javascript
+tiun.on('userChange', ({ event, isAuthenticated, user }) => {
+  if (!isAuthenticated) return showSignedOutUI();
+
+  if (event === 'checkout') {
+    showWelcomeToast(`Subscribed to ${user.productAccess.join(', ')}`);
+  }
+  // event === 'init' on returning visitors — no toast
+  // event === 'update' when entitlements change (renewal, cancellation, tier change)
+
+  renderGatedUI(user);
+});
+```
+
+## User object shape
+
+```typescript
+{
+  userId: 'u-abc123',
+  email: 'user@example.com',
+  productAccess: ['p-live-pro'],
+}
+```
+
+Use `userId` if your backend needs a stable identifier across sessions, and `productAccess` for client-side gating.
+
 ## Multi-tier products
 
 Real apps usually have more than one product. Use a const map so productIds are typed and discoverable:
 
 ```javascript
 const TIUN_PRODUCTS = {
-  basic: 'p-basic',
-  pro:   'p-pro',
+  basic: 'p-live-basic',
+  pro:   'p-live-pro',
 };
 
 tiun.on('userChange', ({ isAuthenticated, user }) => {

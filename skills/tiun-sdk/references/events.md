@@ -1,20 +1,34 @@
 # Events
 
-Subscribe with `tiun.on(event, callback)` or `tiun.once(event, callback)`.
+Subscribe with `tiun.on(event, callback)` or `tiun.once(event, callback)`. You can also pass event callbacks directly to `tiun.init({ onReady, onError, ... })` — see [installation.md](installation.md).
 
 | Event | Fires when | Payload |
 |---|---|---|
 | `ready` | Snippet has loaded and is operational. | none |
-| `userChange` | Auth state or entitlements change. **This is the primary event for subscription gating.** | `{ isAuthenticated: boolean, user: TiunUser \| null }` |
-| `login` | A user successfully logs in. | `TiunUser` |
+| `userChange` | Auth state or entitlements change. **Primary event for subscription gating.** | `{ event: 'init' \| 'login' \| 'checkout' \| 'logout' \| 'update', isAuthenticated: boolean, user: TiunUser \| null }` |
+| `login` | A user successfully logs in. | `{ user: TiunUser }` |
 | `logout` | Session is cleared. | none |
-| `paywallShow` | Time-based: user has no access (no payment method yet, or session ended). | none |
-| `paywallHide` | Time-based: a session is active. **Primary event for time-based gating.** | `{ sessionId: string }` — usable for server-side verification |
-| `error` | An SDK error occurred. | `{ code: string, message: string }`. No canonical list of codes is published; see https://docs.tiun.io. |
+| `paywallShow` | Time-based: user has no access (no payment method yet, or session ended). | `{ isConnected: boolean }` — `isConnected` is `true` if a payment method exists but the session ended |
+| `paywallHide` | Time-based: a session is active. **Primary event for time-based gating.** | `{ sessionId: string, isConnected: boolean }` — `sessionId` is usable for [server-side verification](server-verification.md) |
+| `error` | An SDK error occurred. | `{ code: string, message: string, details?: any }` |
 
-## `userChange` fires once with `event: 'init'` after `ready`
+## `userChange.event` — what changed
 
-As long as your `userChange` listener is registered before (or synchronously after) `tiun.init`, you will receive the initial state automatically — no need to manually re-read `tiun.user` in a `waitForReady().then(...)` callback.
+The `event` field tells you what triggered the fire:
+
+| `event` value | Trigger |
+|---|---|
+| `'init'`     | Session restored on page load. Fires once after `ready`. |
+| `'login'`    | User completed `tiun.login()`. |
+| `'checkout'` | User completed `tiun.checkout()`. |
+| `'logout'`   | User called `tiun.logout()`. |
+| `'update'`   | Entitlements changed mid-session (renewal, cancellation, tier change). |
+
+Most integrations do not need to branch on `event` — `isAuthenticated` + `user.productAccess` are enough for UI gating. Branch on `event` when you need to fire one-off side effects (e.g. show a "Welcome!" toast on `'login'` but not on `'init'`).
+
+## Initial state arrives via the listener
+
+As long as your `userChange` listener is registered before (or synchronously after) `tiun.init`, you will receive the initial state automatically via an `event: 'init'` fire after `ready` — no need to manually re-read `tiun.user` in a `waitForReady().then(...)` callback.
 
 Correct — initial state arrives via the listener:
 
@@ -31,6 +45,10 @@ tiun.on('userChange', syncStateFromTiun);
 tiun.waitForReady().then(syncStateFromTiun);
 ```
 
+## `error.code` is not a stable enum
+
+`error.code` is a string, but there is no published enum of values and codes can change between SDK versions. **Display `error.message` to users and log `error.code` for support; do not branch application logic on specific codes.**
+
 ## Patterns
 
 ### Gating content (subscriptions)
@@ -45,4 +63,4 @@ tiun.on('userChange', ({ isAuthenticated, user }) => {
 
 ### Always unsubscribe in framework cleanups
 
-`tiun.on` returns an unsubscribe function. Call it in React `useEffect` cleanup / Vue `onUnmounted` / etc. to avoid leaks during navigation.
+`tiun.on` returns an unsubscribe function. Call it in React `useEffect` cleanup / Vue `onUnmounted` / etc. to avoid leaks during navigation. For SPA roots that never unmount, `tiun.destroy()` cleans everything up.
