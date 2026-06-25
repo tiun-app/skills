@@ -6,7 +6,25 @@
 
 Works with any agent that supports the Agent Skills standard.
 
-### Claude Code
+```
+npx skills add tiun-app/skills
+```
+
+Requires [Node.js](https://nodejs.org/) 18+ (which provides `npx`) — Node 18 is past end-of-life, so a maintained LTS (20+) is recommended. The `skills` CLI figures out which agents you have installed and drops the skill in the right place.
+
+### Alternative methods
+
+#### gh skill
+
+Use the [`gh skill`](https://cli.github.com/) extension (preview):
+
+```
+gh skill install tiun-app/skills
+```
+
+Requires the [GitHub CLI](https://cli.github.com/) (`gh`) v2.90.0 or later. `gh skill` figures out which agents you have installed and drops the skill in the right place. Add `--scope user` to make it available across every project.
+
+#### Claude Code
 
 Install through the [plugin marketplace](https://code.claude.com/docs/en/discover-plugins#add-from-github):
 
@@ -15,21 +33,11 @@ Install through the [plugin marketplace](https://code.claude.com/docs/en/discove
 /plugin install tiun-sdk@tiun-sdk
 ```
 
-### Cursor
+#### Cursor
 
 Add manually via **Settings > Rules > Add Rule > Remote Rule (Github)** with `tiun-app/skills`.
 
-### gh skill
-
-Or use the [`gh skill`](https://cli.github.com/) extension (preview):
-
-```
-gh skill install tiun-app/skills
-```
-
-`gh skill` figures out which agents you have installed and drops the skill in the right place. Add `--scope user` to make it available across every project.
-
-### Clone
+#### Clone
 
 If you'd rather wire it up by hand, clone and copy `skills/tiun-sdk/` into your agent's skills directory:
 
