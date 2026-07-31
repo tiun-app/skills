@@ -1,8 +1,8 @@
 # Subscriptions
 
-Use subscriptions when you need persistent user accounts and recurring revenue (SaaS, memberships).
+Use subscriptions when you need persistent user accounts and **recurring** revenue (SaaS, memberships). For a product bought once with permanent access, see [one-time.md](one-time.md) instead — it shares this entry point but has no renewal, trial, or expiry.
 
-If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go back — pick the mode (subscription vs time-based) and gather identifiers before generating code.
+If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go back — confirm the mode (subscription, one-time, or time-based) and gather identifiers before generating code.
 
 ## Flow
 
@@ -40,7 +40,8 @@ tiun.on('userChange', ({ event, isAuthenticated, user }) => {
     showWelcomeToast(`Subscribed to ${user.productAccess.join(', ')}`);
   }
   // event === 'init' on returning visitors — no toast
-  // event === 'update' when entitlements change (renewal, cancellation, tier change)
+  // event === 'update' when entitlements change (renewal, cancellation, tier change).
+  // Subscriptions only — a one-time entitlement never changes. See one-time.md.
 
   renderGatedUI(user);
 });
@@ -88,5 +89,6 @@ document.querySelector('#buy-pro').onclick =
 ## Common mistakes
 
 - **Wrapping `tiun.checkout` / `tiun.login` in helper functions that re-check `isInitialized` and `await waitForReady`.** These methods already do both internally. Call them directly from your event handler.
-- **Reading `tiun.user` once at mount.** Entitlements can change mid-session (upgrade, downgrade, renewal). Use `userChange` as the source of truth, not a one-shot read.
+- **Reading `tiun.user` once at mount.** Subscription entitlements can change mid-session (upgrade, downgrade, renewal). Use `userChange` as the source of truth, not a one-shot read.
+- **Applying this file's renewal/cancellation handling to a one-time product.** One-time entitlements are permanent — see [one-time.md](one-time.md).
 - **Building custom payment forms.** The checkout overlay is hosted by tiun; do not reimplement card collection.

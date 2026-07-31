@@ -5,7 +5,7 @@ Subscribe with `tiun.on(event, callback)` or `tiun.once(event, callback)`. You c
 | Event | Fires when | Payload |
 |---|---|---|
 | `ready` | Snippet has loaded and is operational. | none |
-| `userChange` | Auth state or entitlements change. **Primary event for subscription gating.** | `{ event: 'init' \| 'login' \| 'checkout' \| 'logout' \| 'update', isAuthenticated: boolean, user: TiunUser \| null }` |
+| `userChange` | Auth state or entitlements change. **Primary event for checkout-based gating** (subscriptions and one-time purchases). | `{ event: 'init' \| 'login' \| 'checkout' \| 'logout' \| 'update', isAuthenticated: boolean, user: TiunUser \| null }` |
 | `login` | A user successfully logs in. | `{ user: TiunUser }` |
 | `logout` | Session is cleared. | none |
 | `paywallShow` | Time-based: user has no access (no payment method yet, or session ended). | `{ isConnected: boolean }` — `isConnected` is `true` if a payment method exists but the session ended |
@@ -22,7 +22,7 @@ The `event` field tells you what triggered the fire:
 | `'login'`    | User completed `tiun.login()`. |
 | `'checkout'` | User completed `tiun.checkout()`. |
 | `'logout'`   | User called `tiun.logout()`. |
-| `'update'`   | Entitlements changed mid-session (renewal, cancellation, tier change). |
+| `'update'`   | Entitlements changed mid-session (renewal, cancellation, tier change). **Subscriptions only** — a one-time entitlement is permanent and is never removed by `'update'`. |
 
 Most integrations do not need to branch on `event` — `isAuthenticated` + `user.productAccess` are enough for UI gating. Branch on `event` when you need to fire one-off side effects (e.g. show a "Welcome!" toast on `'login'` but not on `'init'`).
 
@@ -51,7 +51,7 @@ tiun.waitForReady().then(syncStateFromTiun);
 
 ## Patterns
 
-### Gating content (subscriptions)
+### Gating content (subscriptions and one-time purchases)
 
 ```javascript
 tiun.on('userChange', ({ isAuthenticated, user }) => {
