@@ -8,6 +8,7 @@ Upstream documentation: [docs.tiun.io](https://docs.tiun.io) (LLM-friendly bundl
 
 - **Authentication.** Email + one-time passcode (OTP). Returning subscribers can receive OTPs via SMS to a registered phone number. No passwords.
 - **Subscription billing.** Recurring charges on fixed schedules (monthly, quarterly, yearly). Suited for SaaS and memberships.
+- **One-time purchases.** A single fixed fee, charged once, granting permanent access. Suited for consulting, lifetime licenses, and single deliverables.
 - **Time-based billing.** Per-session, anonymous metering — users pay for time spent with paid content (e.g. EUR 0.22 per minute) up to a configured monthly cap.
 - **Access control / entitlements.** Delivered to the frontend and verifiable on the server.
 - **Hosted UI overlays.** Checkout and login overlays are rendered by tiun; the integrator calls SDK methods to open them.
@@ -34,12 +35,13 @@ tiun runs **two fully independent parallel environments**. Each has its own snip
 
 You select an environment by setting (or omitting) `sandbox: true` in `tiun.init`. The SDK routes to the matching API host automatically. See [installation.md](installation.md) for the full setup.
 
-## Subscriptions vs time-based
+## The three modes
 
 - **Subscriptions** — persistent user accounts (email + OTP). `user.productAccess[]` lists active subscriptions. Entry point: `tiun.checkout({ productId })`. See [subscriptions.md](subscriptions.md).
+- **One-time purchases** — same accounts and same entry point as subscriptions, charged once as a fixed fee. The product ID enters `user.productAccess[]` and stays there permanently. See [one-time.md](one-time.md).
 - **Time-based** — anonymous per-session billing, no account required. Entry point: `tiun.start()` + `paywallShow` / `paywallHide` events. See [time-based.md](time-based.md).
 
-A single tiun account can offer both at once.
+A single tiun account can offer any combination at once. `user.productAccess[]` mixes subscription and one-time entitlements freely — the array itself does not distinguish them, so gate on the specific product ID you care about.
 
 ## Core mental model
 
@@ -55,7 +57,7 @@ Product configuration, analytics, snippet IDs, and API keys live at `my.tiun.bus
 
 ## Products are configured in the dashboard. There is no runtime product-list API.
 
-Products (both subscription and time-based) are **created and managed in the tiun dashboard**. Each product has a stable `productId` string (`p-live-...` for live, `p-test-...` for sandbox) that the integrator hardcodes into calls like `tiun.checkout({ productId: 'p-live-pro' })`.
+Products (subscription, one-time, and time-based alike) are **created and managed in the tiun dashboard**. Each product has a stable `productId` string (`p-live-...` for live, `p-test-...` for sandbox) that the integrator hardcodes into calls like `tiun.checkout({ productId: 'p-live-pro' })`.
 
 The SDK does **not** expose a method to list or fetch products at runtime. If an agent is asked "how do I get a product list?":
 

@@ -20,7 +20,7 @@ All methods are on the `tiun` singleton imported from `@tiun/sdk`.
 |---|---|
 | `tiun.login()` | Opens the hosted login overlay. |
 | `tiun.logout()` | Clears the session and fires `logout` / `userChange`. |
-| `tiun.checkout({ productId })` | Opens the hosted subscription checkout overlay. |
+| `tiun.checkout({ productId })` | Opens the hosted checkout overlay for a subscription or one-time product. |
 | `tiun.start()` | Opens the time-based connect overlay (no product required). See [time-based.md](time-based.md). |
 | `tiun.setContent({ type, contentId, mediaType })` | Updates the current content context. Used by time-based billing to meter sessions per route. See [time-based.md](time-based.md). |
 | `tiun.getUser()` | Returns `{ isAuthenticated, user }`. `user` is `null` when nobody is signed in. |
@@ -57,4 +57,4 @@ interface TiunUser {
 }
 ```
 
-Use `user.productAccess.includes(productId)` to gate features per subscription tier. The product ID prefix tells you the environment: `p-live-...` for live, `p-test-...` for sandbox.
+Use `user.productAccess.includes(productId)` to gate features per product — a subscription tier or a one-time purchase. The prefix tells you the **environment**, not the product type: `p-live-...` for live, `p-test-...` for sandbox.

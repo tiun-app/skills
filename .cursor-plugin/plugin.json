@@ -1,12 +1,12 @@
 {
   "name": "tiun-sdk",
   "version": "0.1.0",
-  "description": "Skills for integrating and debugging the tiun SDK (@tiun/sdk) for authentication and subscription billing.",
+  "description": "Skills for integrating and debugging the tiun SDK (@tiun/sdk) for authentication, subscription billing, one-time purchases, and time-based paywalls.",
   "author": {
     "name": "tiun",
     "url": "https://tiun.io"
   },
   "homepage": "https://tiun.io",
   "repository": "https://github.com/tiun-app/skills",
-  "keywords": ["tiun", "sdk", "subscriptions", "billing", "authentication"]
+  "keywords": ["tiun", "sdk", "subscriptions", "one-time-purchases", "payments", "billing", "authentication"]
 }

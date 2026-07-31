@@ -1,6 +1,6 @@
 {
   "name": "tiun-sdk",
-  "description": "Teaches AI coding agents how to integrate and debug the tiun SDK (@tiun/sdk) for authentication and subscription billing.",
+  "description": "Teaches AI coding agents how to integrate and debug the tiun SDK (@tiun/sdk) for authentication, subscription billing, one-time purchases, and time-based paywalls.",
   "version": "0.1.0",
   "author": {
     "name": "tiun",

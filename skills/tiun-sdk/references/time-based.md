@@ -2,9 +2,9 @@
 
 Use time-based when you want per-session, anonymous access metered by time spent on paid content — no account required. Users connect a payment method once and are billed per interval (e.g. EUR 0.22 per minute) up to a monthly cap.
 
-Choose this over subscriptions when: articles, single videos, podcasts, donation-prompt-style paywalls, "first N seconds free then pay" experiences.
+Choose this over subscriptions or one-time purchases when: articles, single videos, podcasts, donation-prompt-style paywalls, "first N seconds free then pay" experiences.
 
-If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go back — confirm mode (subscription vs time-based) and gather identifiers before generating code.
+If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go back — confirm mode (subscription, one-time, or time-based) and gather identifiers before generating code.
 
 ## Session lifecycle
 

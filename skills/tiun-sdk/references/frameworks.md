@@ -5,7 +5,7 @@
 Three primitives. Adapt the reactive primitive to your stack.
 
 1. **Init once**, on the client, after the document is ready.
-2. **Bind events** — `userChange` for subscription, `paywallShow` / `paywallHide` for time-based — register the listener before/synchronously after `init` so the initial fire isn't missed.
+2. **Bind events** — `userChange` for checkout-based products (subscriptions and one-time purchases), `paywallShow` / `paywallHide` for time-based — register the listener before/synchronously after `init` so the initial fire isn't missed.
 3. **Teardown** — call the returned `off()` and `tiun.destroy()` **only if the subtree can remount**. See the lifecycle matrix below.
 
 ```javascript

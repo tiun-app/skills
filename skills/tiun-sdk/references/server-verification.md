@@ -4,7 +4,7 @@ Trust nothing the client sends about its own entitlements. When access must be t
 
 There are two verification flows, depending on the product type:
 
-- **User verification** — identity + subscription entitlements. JWT-based. Use for subscription gating and authenticated-only endpoints.
+- **User verification** — identity + `productAccess` entitlements. JWT-based. Use for **subscription and one-time purchase** gating and authenticated-only endpoints. Both are a `productAccess` check, so the code is identical; a one-time product ID simply never disappears from the array.
 - **Session verification** — time-based billing sessions. Session-ID-based. Use to confirm an active time-based session before serving premium content.
 
 Both use the same set of API keys (created in the dashboard under **APIs → Create new key**) and the same per-environment base URLs.
@@ -18,7 +18,7 @@ Both use the same set of API keys (created in the dashboard under **APIs → Cre
 
 API keys are environment-specific — sandbox keys do not work against live and vice versa. Use the base URL and key matching the SDK's `sandbox` flag (`sandbox: true` → sandbox URL + sandbox key). The `X-TIUN-API-KEY` value is a server secret; never expose it to the browser.
 
-## User verification (auth + subscriptions)
+## User verification (auth + `productAccess` entitlements)
 
 JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. Do not cache verification results past the token's lifetime; the frontend can fetch a fresh token whenever you need one.
 
