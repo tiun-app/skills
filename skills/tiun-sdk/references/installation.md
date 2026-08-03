@@ -26,12 +26,12 @@ import { tiun } from '@tiun/sdk';
 
 tiun.init({
   snippetId: 'YOUR_SNIPPET_ID', // required, from my.tiun.business
-  language:  'en',              // 'en' | 'de' | 'fr' (case-insensitive)
-  tone:      'formal',          // 'formal' | 'informal'
-  debug:     false,             // console logging
-  sandbox:   false,             // target sandbox environment
-  onReady:   () => {},          // optional, same as tiun.on('ready', ...)
-  onError:   (err) => {},       // optional, same as tiun.on('error', ...)
+  language: 'en', // 'en' | 'de' | 'fr' (case-insensitive)
+  tone: 'formal', // 'formal' | 'informal'
+  debug: false, // console logging
+  sandbox: false, // target sandbox environment
+  onReady: () => {}, // optional, same as tiun.on('ready', ...)
+  onError: (err) => {}, // optional, same as tiun.on('error', ...)
 });
 ```
 
@@ -41,21 +41,21 @@ The SDK automatically routes to the correct API host based on the `sandbox` flag
 
 ### Config options
 
-| Option | Type | Default | Notes |
-|---|---|---|---|
-| `snippetId` | string | — | **Required.** From dashboard; environment-specific. |
-| `language` | `'en' \| 'de' \| 'fr'` | `'en'` | UI language for hosted overlays. Case-insensitive. Unsupported values trigger a one-time console warning and fall back to `'en'`. |
-| `tone` | `'formal' \| 'informal'` | `'formal'` | Copy style in overlays. |
-| `debug` | boolean | `false` | Enable console logging. |
-| `sandbox` | boolean | `false` | Target sandbox environment (`true`) or live (default). Selects the API host automatically; the snippet ID must match the same environment. |
-| `onReady` / `onError` / `onUserChange` / ... | function | — | Optional event callbacks; equivalent to `tiun.on(...)`. |
+| Option                                       | Type                     | Default    | Notes                                                                                                                                      |
+| -------------------------------------------- | ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `snippetId`                                  | string                   | —          | **Required.** From dashboard; environment-specific.                                                                                        |
+| `language`                                   | `'en' \| 'de' \| 'fr'`   | `'en'`     | UI language for hosted overlays. Case-insensitive. Unsupported values trigger a one-time console warning and fall back to `'en'`.          |
+| `tone`                                       | `'formal' \| 'informal'` | `'formal'` | Copy style in overlays.                                                                                                                    |
+| `debug`                                      | boolean                  | `false`    | Enable console logging.                                                                                                                    |
+| `sandbox`                                    | boolean                  | `false`    | Target sandbox environment (`true`) or live (default). Selects the API host automatically; the snippet ID must match the same environment. |
+| `onReady` / `onError` / `onUserChange` / ... | function                 | —          | Optional event callbacks; equivalent to `tiun.on(...)`.                                                                                    |
 
 ## NPM mode vs script-tag mode
 
 - **NPM mode** (covered above): you bundle `@tiun/sdk` and call `tiun.init({ snippetId, ... })`. This is the path documented in [docs.tiun.io](https://docs.tiun.io) and the default for modern JS apps.
 - **Script-tag mode** (legacy): the snippet is loaded by a `<script>` tag and the configuration is injected by the backend; call `tiun.init()` with no arguments. Useful for legacy server-rendered sites where the snippet is already integrated via a CMS or platform plugin.
 
-> The script-tag path is not currently documented in the public docs. Confirm with tiun (`support@tiun.app`) before relying on it for a new integration; it remains here because legacy hosts still depend on it.
+> The script-tag path is not currently documented in the public docs. Confirm with tiun (`support@tiun.io`) before relying on it for a new integration; it remains here because legacy hosts still depend on it.
 
 Pick one. Mixing both leads to a double-loaded snippet and conflicting config.
 
@@ -65,7 +65,11 @@ tiun runs **two fully independent parallel environments**: live (real customers 
 
 ```javascript
 // Sandbox
-tiun.init({ snippetId: 'YOUR_SANDBOX_SNIPPET_ID', language: 'en', sandbox: true });
+tiun.init({
+  snippetId: 'YOUR_SANDBOX_SNIPPET_ID',
+  language: 'en',
+  sandbox: true,
+});
 
 // Live (default)
 tiun.init({ snippetId: 'YOUR_LIVE_SNIPPET_ID', language: 'en' });
@@ -82,15 +86,15 @@ The dashboard has a sandbox toggle that switches which environment you are viewi
 
 `snippetId` is non-secret runtime configuration. The rule is the same everywhere: write the value where the runtime can actually read it, not just where it's documented.
 
-| Host | Read from | Common mistake |
-|---|---|---|
-| Vite (Vue, Svelte, Solid, vanilla bundled) | `.env` / `.env.local`, exposed as `import.meta.env.VITE_*` | Writing to `.env.example` — it is documentation, never loaded |
-| Next.js | `.env.local`, exposed as `process.env.NEXT_PUBLIC_*` | Forgetting the `NEXT_PUBLIC_` prefix (value becomes server-only) |
-| Nuxt | `nuxt.config.ts` under `runtimeConfig.public`, read via `useRuntimeConfig().public` | Putting it under `runtimeConfig` (server-only, never reaches the client) |
-| Astro | `.env`, exposed as `import.meta.env.PUBLIC_*` | Missing `PUBLIC_` prefix |
-| SvelteKit | `.env`, exposed as `import.meta.env.VITE_PUBLIC_*` or from `$env/static/public` | Importing from `$env/static/private` (server-only) |
-| Plain HTML / no bundler | Inline literal in the `tiun.init({ snippetId })` call, or a `<script>` that sets `window.TIUN_SNIPPET_ID` before SDK load | Trying to use `.env` files (no bundler to load them) |
-| Mobile WebView | Native host injects via `window.TIUN_SNIPPET_ID` (or query string) before page load | Hardcoding in JS that ships to all builds and environments |
+| Host                                       | Read from                                                                                                                 | Common mistake                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Vite (Vue, Svelte, Solid, vanilla bundled) | `.env` / `.env.local`, exposed as `import.meta.env.VITE_*`                                                                | Writing to `.env.example` — it is documentation, never loaded            |
+| Next.js                                    | `.env.local`, exposed as `process.env.NEXT_PUBLIC_*`                                                                      | Forgetting the `NEXT_PUBLIC_` prefix (value becomes server-only)         |
+| Nuxt                                       | `nuxt.config.ts` under `runtimeConfig.public`, read via `useRuntimeConfig().public`                                       | Putting it under `runtimeConfig` (server-only, never reaches the client) |
+| Astro                                      | `.env`, exposed as `import.meta.env.PUBLIC_*`                                                                             | Missing `PUBLIC_` prefix                                                 |
+| SvelteKit                                  | `.env`, exposed as `import.meta.env.VITE_PUBLIC_*` or from `$env/static/public`                                           | Importing from `$env/static/private` (server-only)                       |
+| Plain HTML / no bundler                    | Inline literal in the `tiun.init({ snippetId })` call, or a `<script>` that sets `window.TIUN_SNIPPET_ID` before SDK load | Trying to use `.env` files (no bundler to load them)                     |
+| Mobile WebView                             | Native host injects via `window.TIUN_SNIPPET_ID` (or query string) before page load                                       | Hardcoding in JS that ships to all builds and environments               |
 
 The `snippetId` is not a secret — it identifies an environment, not a user — so any "public" runtime config slot is safe.
 
