@@ -31,7 +31,7 @@ Use a structured question primitive (e.g. `AskQuestion`) if your client supports
 - MCP present, not authed → prompt auth once; if declined, proceed in manual mode.
 - MCP absent → offer to install (single-sentence value proposition: "fetch your snippetId and productIds directly so we avoid copy-paste errors"). If declined, proceed in manual mode.
 
-**0b. Establish integration mode.** Subscription, one-time purchase, time-based, or a combination? See [references/discovery.md](references/discovery.md) for cues that map user language to each mode. **Do not infer mode from `get_products` inventory.** A provider with only one product type today may be planning another tomorrow.
+**0b. Establish integration mode.** Subscription, one-time purchase, time-based, or a combination? See [references/discovery.md](references/discovery.md) for cues that map user language to each mode. **Do not infer mode from the account's inventory.** A provider with only one product type today may be planning another tomorrow.
 
 **0c. Gather identifiers.** Questions depend on mode and MCP availability:
 
@@ -82,7 +82,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 9. **No runtime product-list API.** Products are configured in the tiun dashboard (`my.tiun.business`) and referenced by hardcoded `productId` strings. Do not invent methods like `tiun.getProducts()` or REST endpoints; direct users to the dashboard.
 10. **No webhooks.** tiun does not emit webhooks. For backend integration, drive state from the JWT returned by `getUserVerificationToken()` or the `sessionId` from `paywallHide`. Do not invent webhook endpoints or event payloads.
 11. **Stay upstream-faithful.** All code examples must match https://docs.tiun.io. If a pattern isn't documented upstream (custom SSR wiring, multi-env setups, backend SDKs in other languages, etc.), point the user at the upstream docs rather than inventing a snippet.
-12. **Do not infer integration mode from `get_products` inventory.** Always confirm with the user (see "Step 0"). The list reports what *exists*; it does not report what the integrator *wants to build*.
+12. **Do not infer integration mode from the account's product inventory.** Always confirm with the user (see "Step 0"). What the MCP reports is what *exists*; it does not report what the integrator *wants to build*.
 13. **A one-time product ID in `productAccess` is permanent.** It enters at checkout and never leaves — `event: 'update'` never removes it. Do **not** generate expiry, renewal, cancellation, trial, or revocation handling for a one-time product; that is dead code for state that cannot occur. Renewal and cancellation belong to subscriptions only. See `references/one-time.md`.
 14. **Do not wrap SDK methods to add `isInitialized` / `waitForReady` guards.** `tiun.checkout`, `tiun.login`, `tiun.start`, `tiun.setContent`, and `tiun.logout` already do both internally. Wrapper helpers around these methods are noise.
 15. **Do not pass `baseUrl` to `init()`.** It is an internal-only field reserved for tiun's own infrastructure. Use `sandbox: true` for non-production environments; that is the only public environment switch. The SDK routes to the matching API host automatically.
@@ -117,7 +117,7 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 - User says "buy once", "pay once", "one-time", "lifetime", "lifetime deal", "single payment", "unlock forever", "fixed fee", "perpetual license", "no subscription" → **one-time flow**. Route to one-time.md.
 - User says "article paywall", "watch a video then pay", "session", "no account needed", "donation prompt", "first N seconds free" → **time-based flow**. Route to time-based.md.
 - User says "videos behind a paywall", "premium content" (ambiguous) → **ask** which mode. Don't guess.
-- User says "how do I get my agent to integrate tiun?" / "set this up with an AI coding agent" → point at the upstream Agent integration guide on [docs.tiun.io](https://docs.tiun.io) and the `gh skill install tiun-app/skills tiun-sdk` quickstart in `references/mcp.md`.
+- User says "how do I get my agent to integrate tiun?" / "set this up with an AI coding agent" → point at the upstream Agent integration guide on [docs.tiun.io](https://docs.tiun.io) and the `npx skills add tiun-app/skills` quickstart in `references/mcp.md`.
 - User asks "how do I list products?" / "get all products?" → products are configured in the dashboard at `my.tiun.business`; there is no runtime product-list API. (The MCP exposes inventory to the agent for setup; this is not a runtime SDK feature.)
 - User mentions "verify on the backend", "protect API", "trust the client" → server verification (`X-TIUN-API-KEY` header; per-environment base URLs).
 - User mentions sandbox / `localhost` / "why won't it work locally" → confirm `sandbox: true` + sandbox snippet ID + `p-test-...` product IDs (live is hard-blocked on `localhost`).

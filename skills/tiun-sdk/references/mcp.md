@@ -4,20 +4,28 @@ The tiun MCP server (`https://mcp.tiun.business/`) gives agents access to the us
 
 > The trailing slash matches the upstream docs. Both forms (`https://mcp.tiun.business` and `https://mcp.tiun.business/`) resolve to the same endpoint.
 
-## Tools
+## What it can do
 
-| Tool | Kind | What it does |
-|---|---|---|
-| `get_providers` | read | Lists the user's providers, each with its `snippetId` and a sandbox/live tag. |
-| `get_products` | read | Lists a provider's products for one environment. Requires `providerId` + `sandbox`. |
-| `create_subscription_product` | **write** | Creates a subscription product. Subscription only — one-time and time-based products must be created in the dashboard. |
-| `update_subscription_product` | **write** | Edits an existing subscription product's name and pricing. Replaces values wholesale. |
+**Read the account.** Which providers the user has, each one's snippet ID, and which environment it belongs to. A provider's product catalog for one environment, including every product's ID, pricing type and price. And the tax categories a product can be filed under, with guidance for choosing between them.
 
-The two write tools mutate a real account and carry their own confirmation protocol in their tool descriptions — read it before calling, default to `sandbox: true`, and never source a price you weren't given. There is no delete.
+**Create and edit products.** One-time and subscription products can be created, and their name and pricing edited, so a missing product doesn't have to interrupt the integration. Time-based products are read-only here — they are created and edited in the dashboard.
+
+The exact call signatures live in the MCP itself; read them there rather than assuming a shape. What the MCP cannot tell you is when *not* to call it, so:
+
+**Writes land in a real account, and the account is the user's, not yours.**
+
+- Confirm the exact change with the user — name, price, interval, tax category, environment — and get an explicit yes before writing. Every time, not once per session.
+- Default to sandbox. Writing to live is a deliberate choice the user makes out loud.
+- Never invent a price, name or interval. Take them from the user or from explicit values already in the project, and ask when you have neither.
+- Pricing type is fixed at creation. Nothing converts a one-time product into a subscription or back — an edit aimed at the wrong type is refused, not converted.
+- There is no idempotency key: creating twice creates two products. Check the catalog for an existing match first.
+- Nothing can be deleted, archived or deactivated through the MCP. A write cannot be undone from here.
+
+**A tax category is required on creation, has no default, and can never be changed.** Take it from the account's own list rather than guessing — it determines how the product is taxed. That list is closed: if the product genuinely fits none of the categories, do **not** pick the nearest one. Abandon the create and send the user to `https://my.tiun.business` → new product → "Something else" to submit it. Creating a product under an approximate category is worse than not creating it: the only remedy is archiving it in the dashboard and creating a replacement, and archiving is one-way — there is no restore or re-activate.
 
 ## Detection
 
-Check your tool list for `get_providers` and `get_products` to detect availability.
+Check whether the tiun MCP server is connected in your session — if it is, tools for reading the user's providers and products are available to you.
 
 States:
 
@@ -25,9 +33,9 @@ States:
 - **Present but unauthed** → prompt the user to authenticate once. If declined, proceed in manual mode.
 - **Absent** → offer to install (below). If declined, proceed in manual mode.
 
-## Reading product types from `get_products`
+## Reading a product's type
 
-Each product carries a **`pricingType`** field — the only reliable signal of what kind of product it is:
+Each product the MCP reports carries a **`pricingType`** — the only reliable signal of what kind of product it is, and the thing that decides which SDK entry point you generate:
 
 | `pricingType` | Mode | Entry point |
 |---|---|---|
@@ -35,9 +43,9 @@ Each product carries a **`pricingType`** field — the only reliable signal of w
 | `'OneTime'` | One-time purchase | `tiun.checkout({ productId })` |
 | `'TimeBased'` | Time-based | `tiun.start()` |
 
-**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: one grants a renewable entitlement, the other a permanent one. See [one-time.md](one-time.md).
+**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: a subscription grants a renewable entitlement that can lapse, a one-time purchase grants a permanent one that can never be re-bought. See [one-time.md](one-time.md).
 
-Field note: `recurringPrice` is overloaded. For `Subscription` it is the recurring charge. For `TimeBased` it holds the per-interval usage fee (e.g. price per day of access), not a subscription charge, and `trialPrice` is always null. Do not present a `TimeBased` product's `recurringPrice` to the user as a subscription price.
+A product's price arrives in the block matching its pricing type, and each type has its own shape — the MCP documents them, so read the response rather than assuming a field. What matters when you report a price back to the user is that the three are not interchangeable: a one-time fee is charged once, a subscription price recurs on its interval, and a time-based fee is metered usage against a monthly cap. Never present a time-based fee as a subscription price.
 
 ## Inventory is not intent
 
@@ -47,7 +55,7 @@ A single-type catalog is a reasonable **default to confirm**, not a decision: "I
 
 ## Sandbox and live providers are tagged separately
 
-Each provider returned by `get_providers` is tagged sandbox or live. If the user has both:
+Each provider the MCP returns is tagged sandbox or live. If the user has both:
 
 - Use **sandbox providers + sandbox snippet ID + `sandbox: true`** for local development (live is hard-blocked on `localhost`).
 - Use **live providers + live snippet ID** (no `sandbox` flag) for production deploys.
@@ -56,15 +64,15 @@ Ground discovery questions in inventory — e.g. "you have a sandbox provider an
 
 ## Install
 
-### Quickstart via `gh skill` (recommended)
+### Quickstart (recommended)
 
-If the user installs the tiun-sdk skill from this repo with the GitHub CLI, the MCP is wired automatically:
+Install the skill from this repo — it works with any agent that supports the Agent Skills standard, and needs Node.js 18+:
 
 ```bash
-gh skill install tiun-app/skills tiun-sdk
+npx skills add tiun-app/skills
 ```
 
-Then add the MCP server in the agent's MCP settings (Cursor: Settings → MCP; Claude Code: `claude mcp add ...`; etc.).
+Then add the MCP server in the agent's MCP settings (Cursor: Settings → MCP; Claude Code: `claude mcp add ...`; etc.). Other installers — `gh skill`, the Claude Code plugin marketplace, a Cursor remote rule, or copying the skill in by hand — are listed in the [repo README](https://github.com/tiun-app/skills#installing).
 
 ### Universal config (works for any MCP-compatible client)
 

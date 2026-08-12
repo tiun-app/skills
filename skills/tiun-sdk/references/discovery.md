@@ -4,7 +4,7 @@ Before writing any tiun integration code, gather four pieces of information. Ask
 
 ## 0a. MCP availability
 
-The tiun MCP server (`https://mcp.tiun.business/`) exposes `get_providers` and `get_products` (plus two subscription write tools) against the user's dashboard. Detect by checking your available tools. See [mcp.md](mcp.md) for the full tool list and how to read `pricingType`.
+The tiun MCP server (`https://mcp.tiun.business/`) gives you live access to the user's dashboard: their providers and snippet IDs, the product catalog for either environment, and the ability to create and edit one-time and subscription products. Detect it by checking whether it is connected in your session. See [mcp.md](mcp.md) for what it can do, the rules that govern writing to a real account, and how to read a product's pricing type.
 
 - **Present and authed** → use it to enumerate inventory in 0c.
 - **Present but unauthed** → prompt auth once; if declined, proceed in manual mode.
@@ -24,7 +24,7 @@ Subscription, one-time purchase, time-based, or a combination? Map user language
 
 Subscription and one-time share an entry point (`tiun.checkout`) but differ in lifecycle — one-time entitlements are permanent (see [one-time.md](one-time.md)). If the user is clearly checkout-based but hasn't said whether it recurs, **ask**; the answer changes whether you generate renewal/cancellation handling at all.
 
-**Do not infer mode from `get_products` inventory.** The list reports what *exists*, not what the integrator wants to *build*. A provider with one product type today may add another tomorrow.
+**Do not infer mode from the account's inventory.** What the MCP reports is what *exists*, not what the integrator wants to *build*. A provider with one product type today may add another tomorrow.
 
 Suggested question (when ambiguous):
 

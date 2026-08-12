@@ -8,7 +8,7 @@ Upstream documentation: [docs.tiun.io](https://docs.tiun.io) (LLM-friendly bundl
 
 - **Authentication.** Email + one-time passcode (OTP). Returning subscribers can receive OTPs via SMS to a registered phone number. No passwords.
 - **Subscription billing.** Recurring charges on fixed schedules (monthly, quarterly, yearly). Suited for SaaS and memberships.
-- **One-time purchases.** A single fixed fee, charged once, granting permanent access. Suited for consulting, lifetime licenses, and single deliverables.
+- **One-time purchases.** A single fixed fee granting permanent access — a perpetual licence, bought once per customer and never re-bought. Suited for lifetime access, permanent feature unlocks, and owning a course or piece of content outright. Not a consumable: tiun does not model buying the same thing repeatedly.
 - **Time-based billing.** Per-session, anonymous metering — users pay for time spent with paid content (e.g. EUR 0.22 per minute) up to a configured monthly cap.
 - **Access control / entitlements.** Delivered to the frontend and verifiable on the server.
 - **Hosted UI overlays.** Checkout and login overlays are rendered by tiun; the integrator calls SDK methods to open them.
@@ -22,9 +22,11 @@ The SDK is a single JavaScript library (`@tiun/sdk`) that works in:
 - Vue 3 (including Nuxt with SSR)
 - Any modern JS framework
 
-Supported payment methods: credit/debit cards, PayPal, Apple Pay, Google Pay, PrePaid (tiun credits), Twint (region-dependent).
+Supported payment methods: credit/debit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, Google Pay, and TWINT (region-dependent).
 
-**Mobile / native.** Today, mobile apps integrate by loading the web SDK inside a WebView (`WKWebView` / `Android WebView`) — see [frameworks.md](frameworks.md). First-class native SDKs (Swift, Kotlin, React Native, Flutter) are on the upstream roadmap.
+**Mobile / native.** Setting up live in the dashboard asks the integrator to pick a platform — **Web app** or **Native app** — which tells tiun how to deliver the SDK and what kind of integration they are building.
+
+Today the documented path is the web SDK, and mobile apps use it by loading it inside a WebView (`WKWebView` / `Android WebView`) — see [frameworks.md](frameworks.md). First-class native SDKs (Swift, Kotlin, React Native, Flutter) are on the upstream roadmap. If the user picked **Native app** and wants something other than the WebView route, do not improvise one: point them at support@tiun.io for the current native integration path.
 
 ## Environments — live and sandbox
 
