@@ -137,12 +137,14 @@ cmd_promote() {
   if [ "$DRY_RUN" = "1" ]; then
     echo "  would copy: ${version}/index.json -> ${pointer}"
   else
-    # Server-side copy: the pointer is byte-identical to the version's own index, and
-    # --requires-sync means it has landed by the time this returns.
-    az storage blob copy start --auth-mode login --account-name "$ACCOUNT" \
-      --destination-container "$CONTAINER" --destination-blob "$pointer" \
-      --source-container "$CONTAINER" --source-blob "${version}/index.json" \
-      --requires-sync true >/dev/null
+    # Round-trip through the runner rather than `az storage blob copy start`. It's a few hundred
+    # bytes, and the pointer is written by the same upload path as everything else.
+    local tmp; tmp="$(mktemp -d)"
+    az_blob download --container-name "$CONTAINER" --name "${version}/index.json" \
+      --file "${tmp}/index.json" --no-progress >/dev/null
+    az_blob upload --container-name "$CONTAINER" --name "$pointer" --file "${tmp}/index.json" \
+      --content-type application/json --overwrite --no-progress >/dev/null
+    rm -rf "$tmp"
     echo "  copied: ${version}/index.json -> ${pointer}"
 
     # Read back rather than trust the write.
