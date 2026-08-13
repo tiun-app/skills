@@ -22,3 +22,6 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# ignore dist (created by script/build-skills.sh)
+dist/

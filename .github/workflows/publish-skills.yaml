@@ -1,0 +1,103 @@
+name: Publish Skills
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'skills/**'
+      - 'scripts/**'
+      - '.github/workflows/publish-skills.yaml'
+  workflow_dispatch:
+
+# Pointer blobs are read-modify-write — don't let two publishes interleave.
+concurrency:
+  group: publish-skills
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build artifacts
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.build.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Per-skill timestamps come from each skill's last commit.
+          fetch-depth: 0
+
+      # Writes version= to $GITHUB_OUTPUT itself.
+      - name: Build tarballs and index
+        id: build
+        run: ./scripts/build-skills.sh dist
+
+      - name: Verify reproducibility
+        run: |
+          set -euo pipefail
+          check="$(mktemp -d)/dist"
+          ./scripts/build-skills.sh "$check"
+          for f in dist/*.tar.gz; do
+            a=$(sha256sum "$f" | cut -d' ' -f1)
+            b=$(sha256sum "$check/$(basename "$f")" | cut -d' ' -f1)
+            if [ "$a" != "$b" ]; then
+              echo "::error::$(basename "$f") is not reproducible ($a != $b)"
+              exit 1
+            fi
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skills-dist
+          path: dist/
+          retention-days: 7
+
+  deploy:
+    name: Publish to blob
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+      CONTAINER: ${{ secrets.AZURE_SKILLS_CONTAINER }}
+      # Lets the endpoint check refresh the server's cache instead of waiting it out.
+      CACHE_FLUSH_KEY: ${{ secrets.MCP_CACHE_FLUSH_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: skills-dist
+          path: dist
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Separate steps so an environment can later move to its own job or gate.
+      - name: Publish
+        run: ./scripts/deploy-skills.sh publish "$VERSION" dist
+
+      - name: Verify
+        run: ./scripts/deploy-skills.sh verify "$VERSION"
+
+      # TEMPORARY: drop SKIP_ENDPOINT_CHECK once skill discovery is deployed
+      - name: Promote staging
+        env:
+          SKIP_ENDPOINT_CHECK: 1
+        run: ./scripts/deploy-skills.sh promote staging "$VERSION"
+
+      - name: Promote production
+        env:
+          SKIP_ENDPOINT_CHECK: 1
+        run: ./scripts/deploy-skills.sh promote production "$VERSION"
+
+      - name: Prune
+        run: ./scripts/deploy-skills.sh prune
