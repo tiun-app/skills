@@ -1,5 +1,6 @@
 {
   "name": "tiun-sdk",
+  "displayName": "tiun SDK",
   "version": "0.1.0",
   "description": "Skills for integrating and debugging the tiun SDK (@tiun/sdk) for authentication, subscription billing, one-time purchases, and time-based paywalls.",
   "author": {
@@ -8,5 +9,10 @@
   },
   "homepage": "https://tiun.io",
   "repository": "https://github.com/tiun-app/skills",
-  "keywords": ["tiun", "sdk", "subscriptions", "one-time-purchases", "payments", "billing", "authentication"]
+  "license": "MIT",
+  "keywords": ["tiun", "sdk", "subscriptions", "one-time-purchases", "payments", "billing", "authentication"],
+  "category": "developer-tools",
+  "tags": ["sdk", "payments", "billing", "authentication", "developer-tools"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
 }

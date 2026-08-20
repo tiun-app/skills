@@ -66,10 +66,10 @@ Ground discovery questions in inventory — e.g. "you have a sandbox provider an
 
 ### Quickstart (recommended)
 
-Install the skill from this repo — it works with any agent that supports the Agent Skills standard, and needs Node.js 18+:
+Install the skill from tiun — it works with any agent that supports the Agent Skills standard, and needs Node.js 18+:
 
 ```bash
-npx skills add tiun-app/skills
+npx skills add https://mcp.tiun.business
 ```
 
 Then add the MCP server in the agent's MCP settings (Cursor: Settings → MCP; Claude Code: `claude mcp add ...`; etc.). Other installers — `gh skill`, the Claude Code plugin marketplace, a Cursor remote rule, or copying the skill in by hand — are listed in the [repo README](https://github.com/tiun-app/skills#installing).

@@ -117,7 +117,7 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 - User says "buy once", "pay once", "one-time", "lifetime", "lifetime deal", "single payment", "unlock forever", "fixed fee", "perpetual license", "no subscription" → **one-time flow**. Route to one-time.md.
 - User says "article paywall", "watch a video then pay", "session", "no account needed", "donation prompt", "first N seconds free" → **time-based flow**. Route to time-based.md.
 - User says "videos behind a paywall", "premium content" (ambiguous) → **ask** which mode. Don't guess.
-- User says "how do I get my agent to integrate tiun?" / "set this up with an AI coding agent" → point at the upstream Agent integration guide on [docs.tiun.io](https://docs.tiun.io) and the `npx skills add tiun-app/skills` quickstart in `references/mcp.md`.
+- User says "how do I get my agent to integrate tiun?" / "set this up with an AI coding agent" → point at the upstream Agent integration guide on [docs.tiun.io](https://docs.tiun.io) and the `npx skills add https://mcp.tiun.business` quickstart in `references/mcp.md`.
 - User asks "how do I list products?" / "get all products?" → products are configured in the dashboard at `my.tiun.business`; there is no runtime product-list API. (The MCP exposes inventory to the agent for setup; this is not a runtime SDK feature.)
 - User mentions "verify on the backend", "protect API", "trust the client" → server verification (`X-TIUN-API-KEY` header; per-environment base URLs).
 - User mentions sandbox / `localhost` / "why won't it work locally" → confirm `sandbox: true` + sandbox snippet ID + `p-test-...` product IDs (live is hard-blocked on `localhost`).
