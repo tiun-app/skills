@@ -1,5 +1,7 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "tiun-sdk",
+  "displayName": "tiun SDK",
   "description": "Teaches AI coding agents how to integrate and debug the tiun SDK (@tiun/sdk) for authentication, subscription billing, one-time purchases, and time-based paywalls.",
   "version": "0.1.0",
   "author": {
@@ -7,5 +9,7 @@
     "url": "https://tiun.io"
   },
   "homepage": "https://tiun.io",
-  "repository": "https://github.com/tiun-app/skills"
+  "repository": "https://github.com/tiun-app/skills",
+  "license": "MIT",
+  "keywords": ["tiun", "sdk", "subscriptions", "one-time-purchases", "payments", "billing", "authentication"]
 }

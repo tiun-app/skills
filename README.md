@@ -7,7 +7,7 @@
 Works with any agent that supports the Agent Skills standard.
 
 ```
-npx skills add tiun-app/skills
+npx skills add https://mcp.tiun.business
 ```
 
 Requires [Node.js](https://nodejs.org/) 18+ (which provides `npx`) — Node 18 is past end-of-life, so a maintained LTS (20+) is recommended. The `skills` CLI figures out which agents you have installed and drops the skill in the right place.
@@ -35,7 +35,9 @@ Install through the [plugin marketplace](https://code.claude.com/docs/en/discove
 
 #### Cursor
 
-Add manually via **Settings > Rules > Add Rule > Remote Rule (Github)** with `tiun-app/skills`.
+Install as a [plugin](https://cursor.com/docs/plugins) from this repository — the manifest at [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json) registers the skill and wires up the MCP server in one step.
+
+Alternatively, add it as a rule via **Settings > Rules > Add Rule > Remote Rule (Github)** with `tiun-app/skills`. That installs the skill only, without the MCP server.
 
 #### Clone
 
@@ -76,7 +78,7 @@ Install the tiun MCP server so agents can fetch your providers and products dire
 ### Per client
 
 - **Claude Code:** the plugin marketplace install (`/plugin install tiun-sdk@tiun-sdk`) auto-wires the MCP via this repo's [`.mcp.json`](.mcp.json). To add manually: `claude mcp add tiun https://mcp.tiun.business --transport http` (verify the exact flag in your Claude Code version).
-- **Cursor:** Settings → MCP → Add new MCP server → paste the JSON block above. Or merge it into `~/.cursor/mcp.json`.
+- **Cursor:** the plugin install auto-wires the MCP via this repo's [`.mcp.json`](.mcp.json) (referenced by the manifest's `mcpServers` field). To add manually: Settings → MCP → Add new MCP server → paste the JSON block above. Or merge it into `~/.cursor/mcp.json`.
 - **OpenAI Codex / Gemini CLI / others:** paste the universal config above into the client's MCP config file. See the client's MCP documentation for the exact path.
 
 On first call, agents will prompt for authentication against `my.tiun.business`.
