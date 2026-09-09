@@ -14,7 +14,7 @@ If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go
    tiun.checkout({ productId: 'p-live-pro' });
    ```
 
-   This opens the hosted checkout overlay. **It authenticates as part of the purchase** — an anonymous visitor signs up or logs in inside the overlay — so the button works identically whether or not anyone is signed in. After success, tiun fires `userChange` with `event: 'checkout'` (and `login` if the user was new).
+   This opens the hosted checkout overlay. **It authenticates as part of the purchase** — an anonymous visitor signs up or logs in inside the overlay — so the button works identically whether or not anyone is signed in. After success, tiun fires `userChange` with `event: 'checkout'` — that single event covers new and returning customers alike. `event: 'login'` belongs to a completed `tiun.login()` call and does **not** fire as part of checkout, so login-only side effects hung off it will not run here.
 
 4. Subscribe to `userChange` to drive the UI:
 
@@ -26,23 +26,24 @@ If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go
    });
    ```
 
-5. Offer `tiun.login()` as a **separate** entry point for returning customers who already have access — a "Log in" link in the header or beside the plans, never a step in front of them. OTP is sent to their registered email (and SMS if configured).
+5. Wire `tiun.login()` to your login CTA and `tiun.logout()` to your logout CTA — returning customers need a way in, and signed-in ones a way out. Place login **alongside** the plans (header, or beside the pricing cards), not as a step in front of them. OTP is sent to their registered email (and SMS if configured).
 
-## Wiring CTAs — checkout vs login
+## Wiring CTAs to SDK methods
 
-`tiun.checkout()` authenticates on its own, so a purchase CTA never needs a login step in front of it. Map each CTA by what it means, not by whether the visitor is signed in:
+Each CTA maps to the method that matches what it says. A subscription app normally has all of these, and dropping the auth ones is not the goal — the point is that each calls the right method:
 
 | The CTA... | Maps to |
 |---|---|
 | Names a plan, price, or product — "Subscribe", "Get Pro", "Buy", "€9.99/mo", a pricing-card button | `tiun.checkout({ productId })` |
-| Is about identity only — "Log in", "Sign in", "My account", "Member area" | `tiun.login()` |
+| Is about signing in — "Log in", "Sign in", "My account", "Member area" | `tiun.login()` |
+| Signs the user out — "Log out", "Sign out" | `tiun.logout()` |
 | Is time-based access — "Get access", "Connect" | `tiun.start()` (see [time-based.md](time-based.md)) |
 
-Bind the plan CTA's handler to `tiun.checkout({ productId })` unconditionally, and the login link's handler to `tiun.login()` — whatever "bind a handler" means in the stack at hand.
+Bind each handler directly to its method — whatever "bind a handler" means in the stack at hand. Keep the login and logout CTAs: returning customers need a way back to what they bought, and signed-in ones a way out.
 
-The wrong pattern, in any stack: a plan CTA whose handler tests `tiun.isAuthenticated` and calls `tiun.login()` when it is false, or one that waits for login to complete before calling `tiun.checkout()`. Both add a step that does nothing — checkout already handles sign-up and login — and a first-time visitor lands on a login screen for an account they do not have.
+What does not belong is login placed **in front of** a purchase. `tiun.checkout()` authenticates as part of the flow, so the plan CTA calls it unconditionally — signed in or not. The wrong pattern, in any stack: a plan CTA whose handler tests `tiun.isAuthenticated` and calls `tiun.login()` when it is false, or one that waits for login to complete before calling `tiun.checkout()`. Both add a step that does nothing, and a first-time visitor lands on a login screen for an account they do not have.
 
-**When you are generating the pricing UI yourself** (the user has no buttons yet), produce one checkout CTA per product, plus one login link for returning customers. Do not invent an auth step, an "account required" gate, or a sign-up form ahead of the plans.
+**When you are generating the pricing UI yourself** (the user has no buttons yet), produce one checkout CTA per product **and** a login/logout affordance. Do not invent an auth step, an "account required" gate, or a sign-up form ahead of the plans.
 
 ## Branching on `userChange.event`
 
@@ -107,6 +108,7 @@ document.querySelector('#buy-pro').onclick =
 - **Wrapping `tiun.checkout` / `tiun.login` in helper functions that re-check `isInitialized` and `await waitForReady`.** These methods already do both internally. Call them directly from your event handler.
 - **Reading `tiun.user` once at mount.** Subscription entitlements can change mid-session (upgrade, downgrade, renewal). Use `userChange` as the source of truth, not a one-shot read.
 - **Applying this file's renewal/cancellation handling to a one-time product.** One-time entitlements are permanent — see [one-time.md](one-time.md).
-- **Putting login in front of a plan CTA.** `tiun.checkout()` signs the user up or logs them in as part of the purchase. An `isAuthenticated` check before checkout, or a `login()` → `checkout()` chain, adds a dead step and strands first-time visitors on a login screen for an account they do not have. See [Wiring CTAs](#wiring-ctas--checkout-vs-login).
+- **Putting login in front of a plan CTA.** `tiun.checkout()` signs the user up or logs them in as part of the purchase. An `isAuthenticated` check before checkout, or a `login()` → `checkout()` chain, adds a dead step and strands first-time visitors on a login screen for an account they do not have. See [Wiring CTAs](#wiring-ctas-to-sdk-methods).
+- **Dropping the login and logout CTAs.** The opposite error, and just as wrong: checkout absorbing sign-up does not remove the need for a way back in. Without a login CTA, a returning customer who is signed out cannot reach what they already bought. Map them; just don't put login ahead of a plan.
 - **Building custom payment forms.** The checkout overlay is hosted by tiun; do not reimplement card collection.
 - **Reaching into the checkout or login overlay.** It is shadow DOM and off limits — no injected help text, no CSS overrides, no scraping its inputs. Extra copy goes on your own page, next to the trigger. See [overview.md](overview.md#hosted-ui-is-a-black-box).

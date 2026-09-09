@@ -35,7 +35,7 @@ Expected. The overlay's internals are shadow DOM, unversioned, and change withou
 
 ## First-time visitors cannot buy — they hit a login screen
 
-The plan CTA is wired to `tiun.login()`, or to an `isAuthenticated` check that falls back to login. `tiun.checkout()` authenticates by itself; a visitor with no account signs up inside the checkout overlay. Wire plan CTAs directly to `tiun.checkout({ productId })` and keep login as a separate link — see [subscriptions.md](subscriptions.md#wiring-ctas--checkout-vs-login).
+The plan CTA is wired to `tiun.login()`, or to an `isAuthenticated` check that falls back to login. `tiun.checkout()` authenticates by itself; a visitor with no account signs up inside the checkout overlay. Wire plan CTAs directly to `tiun.checkout({ productId })`, and keep the login CTA — just alongside the plans rather than ahead of them — see [subscriptions.md](subscriptions.md#wiring-ctas-to-sdk-methods).
 
 ## `error` event codes look unfamiliar
 
