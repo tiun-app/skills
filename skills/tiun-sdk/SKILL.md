@@ -47,7 +47,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 **0d. Identify what to gate.** Without this step the agent is generating boilerplate with no target. Ask:
 
 - Which routes/components/features require access?
-- What should non-authenticated users see? (inline login + checkout buttons / redirect to pricing page / full-screen paywall / teaser + subscribe)
+- What should signed-out users see, and how does the app's journey start? (offering or pricing page / account-first app where users sign in before meeting an upgrade / full-screen paywall / teaser + subscribe). Keep the journey the app is built for.
 - What should authenticated-but-no-access users see? (typically the same UX with "upgrade" copy)
 - Is there a free preview? (If yes, this is often a cue the user actually wants **time-based**, not subscription — feed back into 0b.)
 - For multi-tier: which routes/features map to which tier?
@@ -58,16 +58,16 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 |---|---|
 | Discovery, scoping, MCP detection, mode selection | [references/discovery.md](references/discovery.md) |
 | MCP installation per client, detection, auth | [references/mcp.md](references/mcp.md) |
-| What tiun is, supported platforms, product model | [references/overview.md](references/overview.md) |
+| What tiun is, supported platforms, product model, hosted-UI boundaries | [references/overview.md](references/overview.md) |
 | Install / init / config / per-host env injection | [references/installation.md](references/installation.md) |
 | Method or property lookup | [references/api-reference.md](references/api-reference.md) |
 | Event names and payloads | [references/events.md](references/events.md) |
-| Subscription gating (accounts + recurring billing) | [references/subscriptions.md](references/subscriptions.md) |
+| Subscription gating (accounts + recurring billing), choosing checkout vs login | [references/subscriptions.md](references/subscriptions.md) |
 | One-time purchase gating (fixed fee, permanent access) | [references/one-time.md](references/one-time.md) |
 | Time-based paywall (per-session, anonymous, metered) | [references/time-based.md](references/time-based.md) |
 | Trusted backend authorization | [references/server-verification.md](references/server-verification.md) |
 | Framework wiring (any stack) + lifecycle matrix | [references/frameworks.md](references/frameworks.md) |
-| "Overlay not appearing", SSR errors, sandbox mismatch | [references/troubleshooting.md](references/troubleshooting.md) |
+| "Overlay not appearing", SSR errors, sandbox mismatch, broken overlay injections | [references/troubleshooting.md](references/troubleshooting.md) |
 
 ## Load-bearing rules
 
@@ -75,7 +75,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 2. **`snippetId` is not a secret.** It identifies the environment. Use `NEXT_PUBLIC_*` / `public` runtime config.
 3. **`userChange` is the source of truth for checkout-based gating** (subscriptions and one-time purchases), not a one-shot `tiun.user` read. Entitlements change mid-session. The payload includes `event: 'init' | 'login' | 'checkout' | 'logout' | 'update'` for cases where you need to know what triggered the change.
 4. **Never trust the client for authorization.** For protected server resources: `tiun.getUserVerificationToken()` returns a JWT (5-minute lifetime), send it to your backend, the backend validates it via `POST /live_api/s2s/v1/users/verification` with `X-TIUN-API-KEY`. For time-based, use the `sessionId` from `paywallHide` against `PATCH /live_api/s2s/v1/sessions/{sessionId}/status`. See `references/server-verification.md`.
-5. **Do not reimplement checkout/login UIs.** tiun hosts them. Call `tiun.checkout({ productId })`, `tiun.login()`, or `tiun.start()` to open them.
+5. **The hosted UI is a black box — do not reimplement it and do not modify it.** tiun renders checkout, login, and the connect overlay in shadow DOM. Open them with `tiun.checkout({ productId })`, `tiun.login()`, or `tiun.start()`, and stop there. Never pierce `shadowRoot` to query, append, or observe nodes; never inject text, tooltips, badges, or banners into it; never target it with CSS (host selectors, `::part`, `::slotted`, `!important` overrides); never reposition or wrap it; never read values out of its inputs. Its internal structure is unversioned and changes without notice, and it sits inside a payment flow — an injection breaks silently and takes checkout down with it. The only supported surfaces are `init()` config (`language`, `tone`) and dashboard settings. **If the customer needs extra copy or explanation, put it on their own page next to the trigger, before the overlay opens** — not inside it. Anything the config and dashboard do not expose is a request to support@tiun.io, not a client-side patch. See [references/overview.md](references/overview.md#hosted-ui-is-a-black-box).
 6. **Methods before `ready` may queue or no-op.** Methods like `checkout`/`login`/`start`/`setContent`/`logout` already call `ensureInitialized()` and `await this.waitForReady()` internally — no need to wrap them.
 7. **Unsubscribe handlers** returned from `tiun.on(...)` on component unmount to avoid stale listeners. Or call `tiun.destroy()` if the whole subtree is going away.
 8. **Live and sandbox are independent parallel environments.** Each has its own snippet ID, products, product-ID prefix (`p-live-...` vs `p-test-...`), API keys, and API base URL (`https://api.tiun.live` vs `https://api-sandbox.tiun.live`). The SDK's `sandbox` flag must match the dashboard view and the product-ID prefix, or checkout silently fails. `localhost` is blocked in live and enabled by default in sandbox.
@@ -89,6 +89,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 16. **`language` is a closed enum**: `'en' | 'de' | 'fr'`, case-insensitive. Unsupported values trigger a one-time console warning and fall back to `'en'`. Do not generate other values.
 17. **Do not branch app logic on `error.code`.** It's a string but there's no published enum; codes can change between SDK versions. Display `err.message` to users and log `err.code` for support.
 18. **Write runtime config to files the bundler actually loads.** `.env.example` is documentation and is never evaluated. Vite loads `.env` / `.env.local`; Next.js loads `.env.local` and requires the `NEXT_PUBLIC_*` prefix for client-exposed values; Nuxt loads via `runtimeConfig.public` in `nuxt.config.ts`. See `references/installation.md` for the per-host table.
+19. **Use authentication for account entry and checkout for purchases.** Signing up or signing in → `tiun.login()`; buying a product or plan → `tiun.checkout({ productId })`; signing out → `tiun.logout()`. Choose by the action's purpose, not its label. Checkout handles the authentication and returning-customer cases that come with purchasing, so a purchase action opens it directly rather than routing through a separate login. This is about what a purchase action opens, not about app structure — purchase-first and account-first journeys are both valid. See `references/subscriptions.md` → "Choosing checkout or login".
 
 ## Minimal working example
 
@@ -121,4 +122,6 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 - User asks "how do I list products?" / "get all products?" → products are configured in the dashboard at `my.tiun.business`; there is no runtime product-list API. (The MCP exposes inventory to the agent for setup; this is not a runtime SDK feature.)
 - User mentions "verify on the backend", "protect API", "trust the client" → server verification (`X-TIUN-API-KEY` header; per-environment base URLs).
 - User mentions sandbox / `localhost` / "why won't it work locally" → confirm `sandbox: true` + sandbox snippet ID + `p-test-...` product IDs (live is hard-blocked on `localhost`).
+- User asks to restyle the overlay, relabel its fields, or add help text / a note / a tooltip inside checkout or login → not supported. The overlay's internals are off limits (Rule 5); put the copy on their own page next to the trigger, and route branding requests to support@tiun.io.
+- User is wiring purchase, sign-in, or sign-out actions → match each to its purpose: purchases open `tiun.checkout({ productId })`, account entry opens `tiun.login()`, sign-out calls `tiun.logout()`. Keep the app's existing journey (Rule 19).
 - Errors like "overlay doesn't appear", "methods called before ready" → troubleshooting.

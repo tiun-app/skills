@@ -37,7 +37,7 @@ tiun.init({
 
 `tiun.init()` is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
 
-The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 14 in `SKILL.md`).
+The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 15 in `SKILL.md`).
 
 ### Config options
 
@@ -77,10 +77,14 @@ tiun.init({ snippetId: 'YOUR_LIVE_SNIPPET_ID', language: 'en' });
 
 The dashboard has a sandbox toggle that switches which environment you are viewing/editing. Keep the SDK's `sandbox` flag aligned with the dashboard view while you're working, or snippet IDs and product IDs will not line up with what the dashboard shows.
 
+**Registered domains.** Each environment is set up with a domain, and that registration is what authorizes the SDK to run there (CORS). Live's Get Started modal asks for the **primary domain** — the production site. Sandbox asks for a **test domain** on first access; a staging host is the intended answer, though the live domain is accepted as a fallback.
+
+A request from an unregistered domain fails the same way a wrong snippet ID does. When a deploy works locally but not on staging, check the registered domain before re-checking IDs.
+
 **`localhost` handling:**
 
 - Live: `localhost` is **blocked**. Use live only from your registered production domains.
-- Sandbox: `localhost` is **enabled by default on any port** — no explicit registration needed. Most teams develop locally with `sandbox: true` and a sandbox snippet ID.
+- Sandbox: `localhost` is **enabled by default on any port** — no explicit registration needed, and it works regardless of the registered test domain. Most teams develop locally with `sandbox: true` and a sandbox snippet ID.
 
 ## Where to put `snippetId` per host
 

@@ -45,7 +45,7 @@ Once checkout completes, the product ID enters `productAccess` and **never leave
 The same customer also **cannot buy it a second time**. tiun blocks the repeat purchase before any money moves:
 
 - **Signed in and already entitled** → checkout links the existing entitlement instead of charging, and the customer is shown an "already purchased — no new charge was made" screen.
-- **Signed out, signing up again with the same email** → the sign-up is rejected ("customer already exists"); they have to log in.
+- **Signed out** → if they enter the email that already owns it, checkout shows its already-purchased experience; they can also choose the sign-in option inside checkout.
 
 So a one-time product is a **perpetual licence, not a consumable**. It is not a shop item that can be re-ordered: there are no quantities, carts, credit packs, tickets, or "buy another" flows. If the user wants customers to buy the *same* thing more than once, tiun does not model that — say so rather than wiring it up.
 
@@ -53,7 +53,7 @@ So a one-time product is a **perpetual licence, not a consumable**. It is not a 
 
 **Once the customer owns it, hide or disable the buy button.** Never render "buy again", a quantity selector, or a repeat-purchase flow, and never write "cancel", "manage plan", "renews on" or "expires on" copy — none of those states exist.
 
-The practical consequence for UX: login is the only thing between a returning customer and the content they already paid for. Make sure the sales page offers **log in**, not just a buy button — otherwise a returning customer is stuck rather than overcharged: sign-up rejects their email, and there is no other way back in.
+Returning customers still need a way to reach what they own without starting a purchase, so give the app a sign-in entry point (`tiun.login()`). Where it sits follows the app's design.
 
 ## Mixed catalogs
 
@@ -66,7 +66,7 @@ const TIUN_PRODUCTS = {
 };
 
 tiun.on('userChange', ({ isAuthenticated, user }) => {
-  if (!isAuthenticated) return showSignedOutUI();
+  if (!isAuthenticated) return showSignedOutUI(); // whatever your app shows signed-out visitors
 
   const owned      = user.productAccess.includes(TIUN_PRODUCTS.lifetime);
   const subscribed = user.productAccess.includes(TIUN_PRODUCTS.pro);
@@ -89,4 +89,5 @@ tiun.on('userChange', ({ isAuthenticated, user }) => {
 - **Generating revocation branches.** Copying subscription gating wholesale brings renewal/cancellation handling that can never fire for a one-time product.
 - **Subscription copy on one-time UI.** "Subscribe", "Subscribed to …", "Manage your plan" are wrong. Use "Buy", "Purchased", "You own this".
 - **Assuming the product ID prefix tells you the type.** It does not — `p-live-…` / `p-test-…` encode the *environment* only. The `pricingType` the MCP reports for each product (`'Subscription' | 'TimeBased' | 'OneTime'`) is the only signal, and even then, inventory is not intent — confirm with the user. See [mcp.md](mcp.md).
+- **Reaching into the checkout overlay.** It is shadow DOM and off limits — no injected copy, no CSS overrides. See [overview.md](overview.md#hosted-ui-is-a-black-box).
 - **Offering a one-time product a trial.** Trials are a subscription-only concept; the dashboard does not expose one here.

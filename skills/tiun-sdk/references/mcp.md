@@ -47,6 +47,23 @@ Each product the MCP reports carries a **`pricingType`** — the only reliable s
 
 A product's price arrives in the block matching its pricing type, and each type has its own shape — the MCP documents them, so read the response rather than assuming a field. What matters when you report a price back to the user is that the three are not interchangeable: a one-time fee is charged once, a subscription price recurs on its interval, and a time-based fee is metered usage against a monthly cap. Never present a time-based fee as a subscription price.
 
+## What a product needs before you create one
+
+The exact call signature is the MCP's to define, but the fields come from the dashboard form and do not vary. Collect them from the user *before* calling a create tool — an abandoned half-specified create still leaves a product behind.
+
+| Type | Fields |
+|---|---|
+| **Subscription** | Name (shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
+| **One-time** | Name and price. No interval, no trial — neither exists for this type |
+| **Time-based** | Name, interval in **minutes** (no other unit), interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
+
+Two that are easy to get wrong:
+
+- **A trial is two values, not a flag** — a trial length *and* a trial amount. Ask for both, or don't offer one.
+- **Time-based intervals are minutes.** "Per hour" is 60; there is no hour unit to pass.
+
+Plus the tax category — required, no default, permanent (above).
+
 ## Inventory is not intent
 
 The MCP returns what *exists* in the user's account. It does **not** report what they want to build. Always confirm integration mode and chosen products with the user — see [discovery.md](discovery.md) Step 0b and 0c.
@@ -88,6 +105,23 @@ Then add the MCP server in the agent's MCP settings (Cursor: Settings → MCP; C
 ```
 
 Paste this into your client's MCP config file. The exact location depends on the client.
+
+### If the client cannot complete browser sign-in
+
+Some agents cannot run the OAuth browser flow against a remote MCP server. Proxy it locally with `mcp-remote` instead of falling back to manual mode:
+
+```json
+{
+  "mcpServers": {
+    "tiun": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.tiun.business/"]
+    }
+  }
+}
+```
+
+Needs Node installed; it opens a browser window to authenticate on first connect.
 
 ### Per client
 

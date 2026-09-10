@@ -256,6 +256,8 @@ A root-provided service lives for the app's lifetime, so no `ngOnDestroy` cleanu
 
 ### Mobile WebView
 
+**React Native does not belong here.** It has its own SDK (`@tiun/react-native-sdk`) with a different API surface — see [overview.md](overview.md#supported-platforms). This section is for native shells that host web content in a WebView.
+
 The SDK runs **inside** the WebView. The native shell does not call the SDK directly. To bridge entitlement checks to native code, expose a function that returns a JWT from `getUserVerificationToken()`:
 
 ```javascript
