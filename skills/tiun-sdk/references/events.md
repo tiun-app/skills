@@ -26,6 +26,8 @@ The `event` field tells you what triggered the fire:
 
 Most integrations do not need to branch on `event` — `isAuthenticated` + `user.productAccess` are enough for UI gating. Branch on `event` when you need to fire one-off side effects (e.g. show a "Welcome!" toast on `'login'` but not on `'init'`).
 
+The SDK does not compute `event`; it passes through the value the hosted snippet sends, defaulting to `'update'` when none is sent. The documented value after a completed checkout is `'checkout'`. Don't depend on whether a `'login'` fire also accompanies a checkout — put post-purchase side effects on `'checkout'`, and drive gating from `isAuthenticated` + `productAccess`.
+
 ## Initial state arrives via the listener
 
 As long as your `userChange` listener is registered before (or synchronously after) `tiun.init`, you will receive the initial state automatically via an `event: 'init'` fire after `ready` — no need to manually re-read `tiun.user` in a `waitForReady().then(...)` callback.
@@ -55,7 +57,7 @@ tiun.waitForReady().then(syncStateFromTiun);
 
 ```javascript
 tiun.on('userChange', ({ isAuthenticated, user }) => {
-  if (!isAuthenticated) return showPricingPage();
+  if (!isAuthenticated) return showSignedOutUI(); // whatever your app shows signed-out visitors
   if (user.productAccess.includes('p-live-pro')) return showProContent();
   return showUpgradePrompt();
 });

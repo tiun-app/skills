@@ -47,7 +47,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 **0d. Identify what to gate.** Without this step the agent is generating boilerplate with no target. Ask:
 
 - Which routes/components/features require access?
-- What should non-authenticated users see? (pricing cards with checkout buttons / redirect to pricing page / full-screen paywall / teaser + subscribe). Note that "log in first" is never the answer for a plan CTA — checkout authenticates on its own (Rule 19).
+- What should signed-out users see, and how does the app's journey start? (offering or pricing page / account-first app where users sign in before meeting an upgrade / full-screen paywall / teaser + subscribe). Keep the journey the app is built for.
 - What should authenticated-but-no-access users see? (typically the same UX with "upgrade" copy)
 - Is there a free preview? (If yes, this is often a cue the user actually wants **time-based**, not subscription — feed back into 0b.)
 - For multi-tier: which routes/features map to which tier?
@@ -62,7 +62,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 | Install / init / config / per-host env injection | [references/installation.md](references/installation.md) |
 | Method or property lookup | [references/api-reference.md](references/api-reference.md) |
 | Event names and payloads | [references/events.md](references/events.md) |
-| Subscription gating (accounts + recurring billing), CTA → method mapping | [references/subscriptions.md](references/subscriptions.md) |
+| Subscription gating (accounts + recurring billing), choosing checkout vs login | [references/subscriptions.md](references/subscriptions.md) |
 | One-time purchase gating (fixed fee, permanent access) | [references/one-time.md](references/one-time.md) |
 | Time-based paywall (per-session, anonymous, metered) | [references/time-based.md](references/time-based.md) |
 | Trusted backend authorization | [references/server-verification.md](references/server-verification.md) |
@@ -89,7 +89,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 16. **`language` is a closed enum**: `'en' | 'de' | 'fr'`, case-insensitive. Unsupported values trigger a one-time console warning and fall back to `'en'`. Do not generate other values.
 17. **Do not branch app logic on `error.code`.** It's a string but there's no published enum; codes can change between SDK versions. Display `err.message` to users and log `err.code` for support.
 18. **Write runtime config to files the bundler actually loads.** `.env.example` is documentation and is never evaluated. Vite loads `.env` / `.env.local`; Next.js loads `.env.local` and requires the `NEXT_PUBLIC_*` prefix for client-exposed values; Nuxt loads via `runtimeConfig.public` in `nuxt.config.ts`. See `references/installation.md` for the per-host table.
-19. **Map every CTA to the method that matches it.** An app with accounts needs all of them: a login CTA ("Log in", "Sign in", "My account") calls `tiun.login()`, a logout CTA calls `tiun.logout()`, and a CTA naming a plan, price, or product ("Subscribe", "Get Pro", "Buy", a pricing-card button) calls `tiun.checkout({ productId })`. Keep the auth CTAs — this rule is about *which* method each CTA calls, never about having fewer of them. What does not belong is login placed **in front of** a purchase: `tiun.checkout()` authenticates as part of the flow, so an anonymous visitor who clicks a plan signs up or logs in inside the overlay and comes out entitled. So never chain `login()` → `checkout()`, never wrap checkout in an `isAuthenticated` check, and never hide plans behind a login screen. When generating the UI yourself, produce one checkout CTA per product **and** a login/logout affordance — parallel entry points, not a sequence. See `references/subscriptions.md`.
+19. **Use authentication for account entry and checkout for purchases.** Signing up or signing in → `tiun.login()`; buying a product or plan → `tiun.checkout({ productId })`; signing out → `tiun.logout()`. Choose by the action's purpose, not its label. Checkout handles the authentication and returning-customer cases that come with purchasing, so a purchase action opens it directly rather than routing through a separate login. This is about what a purchase action opens, not about app structure — purchase-first and account-first journeys are both valid. See `references/subscriptions.md` → "Choosing checkout or login".
 
 ## Minimal working example
 
@@ -123,5 +123,5 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 - User mentions "verify on the backend", "protect API", "trust the client" → server verification (`X-TIUN-API-KEY` header; per-environment base URLs).
 - User mentions sandbox / `localhost` / "why won't it work locally" → confirm `sandbox: true` + sandbox snippet ID + `p-test-...` product IDs (live is hard-blocked on `localhost`).
 - User asks to restyle the overlay, relabel its fields, or add help text / a note / a tooltip inside checkout or login → not supported. The overlay's internals are off limits (Rule 5); put the copy on their own page next to the trigger, and route branding requests to support@tiun.io.
-- User has a pricing page, plan cards, or "Subscribe" / "Buy" buttons → map each one straight to `tiun.checkout({ productId })`. Sign-in and sign-out CTAs still map to `tiun.login()` / `tiun.logout()` as normal — the rule is about which method each CTA calls, not about dropping auth CTAs (Rule 19).
+- User is wiring purchase, sign-in, or sign-out actions → match each to its purpose: purchases open `tiun.checkout({ productId })`, account entry opens `tiun.login()`, sign-out calls `tiun.logout()`. Keep the app's existing journey (Rule 19).
 - Errors like "overlay doesn't appear", "methods called before ready" → troubleshooting.

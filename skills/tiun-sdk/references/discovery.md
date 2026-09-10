@@ -89,7 +89,7 @@ When MCP is present, ground questions in inventory:
 ## 0d. Gating scope
 
 - Which routes / components / features should require access? (Free-form, or multi-select if you've explored the routes file.)
-- What should non-authenticated users see? (Pricing cards with checkout buttons / redirect to `/pricing` / full-screen paywall overlay / teaser + subscribe button.) Whatever they see, plan CTAs map **directly** to `tiun.checkout` — "log in first" is never an option in front of a plan, because checkout authenticates on its own. A login CTA should still be there for returning customers — *beside* the plans, not ahead of them. See [subscriptions.md](subscriptions.md#wiring-ctas-to-sdk-methods).
+- What should signed-out users see, and how does the app's journey start? (Offering or pricing page where visitors choose a plan / account-first app where users sign in before meeting an upgrade / full-screen paywall overlay / teaser + subscribe button.) Keep the journey the app is built for — see [subscriptions.md](subscriptions.md#choosing-checkout-or-login).
 - What should authenticated-but-no-access users see? (Usually the same UX with "upgrade" copy)
 - Is there a free preview? (e.g. first 30 seconds of video, first paragraph of article) — if yes, the user may actually want **time-based**; feed back into 0b.
 - For multi-tier: which routes/features map to which tier?
