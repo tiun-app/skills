@@ -24,6 +24,13 @@ After payment, the in-app browser returns to the app through a deep link the int
 
 Only the **scheme** has to match the dashboard. The host and path after it are the integrator's choice — but the Android intent filter's `host` / `pathPrefix` must match the `returnUrl` they pass.
 
+The two halves fail differently, and the symptom says which one is wrong:
+
+- **Login or checkout opens and closes straight away** → `returnUrl`'s scheme is not the dashboard App scheme for the environment `host` points at (a typo, a different scheme, or registered only in the other environment). tiun checks it when the overlay opens.
+- **Payment succeeds but checkout never resolves** → the dashboard accepted the scheme, but the app can't receive the deep link: native registration doesn't match, `RCTLinkingManager` forwarding is missing (iOS), or `singleTask` is missing (Android).
+
+When either is reported, compare the three places character for character before changing anything else.
+
 Before writing config, **ask for the app's existing URL scheme** (check `Info.plist` / `AndroidManifest.xml` first — many apps already register one). Do not invent a scheme; reuse the app's own and remind the user to enter it in the dashboard. The dashboard holds **one** app scheme per environment; additional schemes are managed by tiun via support@tiun.io.
 
 ## Install
@@ -242,7 +249,8 @@ Same backend as the web SDK: get `getUserVerificationToken()`, send it as a bear
 
 | Symptom | Likely cause |
 |---|---|
-| Checkout opens, payment succeeds, but the app never resolves it | Scheme mismatch between dashboard App scheme, native registration, and `returnUrl`; or missing `RCTLinkingManager` forwarding (iOS); or missing `singleTask` (Android) |
+| Login or checkout opens and closes immediately | `returnUrl`'s scheme isn't the dashboard App scheme in the environment `host` points at — or is registered only in the other environment |
+| Checkout opens, payment succeeds, but the app never resolves it | Native registration (`Info.plist` / intent filter) doesn't match `returnUrl`'s scheme; or missing `RCTLinkingManager` forwarding (iOS); or missing `singleTask` (Android) |
 | Login / checkout fails on iOS Simulator | Expected — no Secure Enclave. Use a physical iPhone |
 | `cryptoOk` is `false` | The WebView can't do the crypto the session needs; auth can't work on this device |
 | Bundle fails with a missing module | A peer dependency isn't installed |

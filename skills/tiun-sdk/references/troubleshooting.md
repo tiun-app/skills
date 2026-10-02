@@ -16,7 +16,7 @@
 
 ## React Native
 
-See the troubleshooting table in [react-native.md](react-native.md#troubleshooting). The most common one: payment succeeds but checkout never returns to the app → the scheme differs between the dashboard App scheme, the native registration, and `returnUrl`, or iOS is missing `RCTLinkingManager` forwarding, or Android is missing `android:launchMode="singleTask"`.
+See the troubleshooting table in [react-native.md](react-native.md#troubleshooting). The two most common ones are both return-scheme mismatches. Login or checkout opens and closes immediately → `returnUrl`'s scheme isn't the dashboard App scheme for the environment `host` points at. Payment succeeds but checkout never returns to the app → the native registration doesn't match `returnUrl`'s scheme, or iOS is missing `RCTLinkingManager` forwarding, or Android is missing `android:launchMode="singleTask"`.
 
 ## `userChange` never fires
 
@@ -53,6 +53,7 @@ Expected. The overlay's internals are shadow DOM, unversioned, and change withou
 | User state not updating | Relying only on `tiun.user` snapshot | Listen for `userChange` and update from the event payload |
 | Session not restoring | Different browser or cleared storage | Sessions are per-browser; clearing cookies/site data clears the session |
 | Works locally, fails on deployed site | Domain not registered for that environment | Add it in Settings → Environment setup → Web (extra domains via support@tiun.io) |
+| RN: login / checkout opens and closes immediately | `returnUrl` scheme not registered as the dashboard App scheme for that environment | Compare `returnUrl` with Settings → Environment setup → App scheme in the environment `host` targets — see [react-native.md](react-native.md) |
 | RN: payment succeeds, app never resolves checkout | Return scheme mismatch or missing native forwarding | Match dashboard App scheme ↔ native registration ↔ `returnUrl`; check `RCTLinkingManager` (iOS) and `singleTask` (Android) — see [react-native.md](react-native.md) |
 | Injected help text / CSS inside the overlay vanished | Overlay internals are shadow DOM and change without notice | Remove the injection; put the copy on your own page next to the trigger |
 | Purchase button opens login instead of checkout | Handler branches on auth state, or runs `login()` first | Open `tiun.checkout({ productId })` from the purchase action — see [subscriptions.md](subscriptions.md#choosing-checkout-or-login) |
