@@ -7,11 +7,11 @@ Upstream documentation: [docs.tiun.io](https://docs.tiun.io) (LLM-friendly bundl
 ## What tiun provides
 
 - **Authentication.** Email + one-time passcode (OTP). Returning subscribers can receive OTPs via SMS to a registered phone number. No passwords.
-- **Subscription billing.** Recurring charges on fixed schedules (monthly, quarterly, yearly). Suited for SaaS and memberships.
+- **Subscription billing.** Recurring charges on a repeating interval, set as a count plus a unit — daily, weekly, monthly, or yearly, or any multiple of those ("every 3 months"). Optionally preceded by a trial. Suited for SaaS and memberships.
 - **One-time purchases.** A single fixed fee granting permanent access — a perpetual licence, bought once per customer and never re-bought. Suited for lifetime access, permanent feature unlocks, and owning a course or piece of content outright. Not a consumable: tiun does not model buying the same thing repeatedly.
 - **Time-based billing.** Per-session, anonymous metering — users pay for time spent with paid content (e.g. EUR 0.22 per minute) up to a configured monthly cap.
 - **Access control / entitlements.** Delivered to the frontend and verifiable on the server.
-- **Hosted UI overlays.** Checkout and login overlays are rendered by tiun; the integrator calls SDK methods to open them.
+- **Hosted UI overlays.** Checkout and login overlays are rendered by tiun, inside shadow DOM. The integrator calls SDK methods to open them and does not modify what is inside — see [Hosted UI is a black box](#hosted-ui-is-a-black-box).
 
 ## Supported platforms
 
@@ -24,18 +24,23 @@ The SDK is a single JavaScript library (`@tiun/sdk`) that works in:
 
 Supported payment methods: credit/debit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, Google Pay, and TWINT (region-dependent).
 
-**Mobile / native.** Setting up live in the dashboard asks the integrator to pick a platform — **Web app** or **Native app** — which tells tiun how to deliver the SDK and what kind of integration they are building.
+**Mobile / native.** In the dashboard, **Settings → Environment setup** has a **Web** section (one live domain) and an **App** section (one app scheme, for iOS/Android). The integrator turns on either or both, per environment.
 
-Today the documented path is the web SDK, and mobile apps use it by loading it inside a WebView (`WKWebView` / `Android WebView`) — see [frameworks.md](frameworks.md). First-class native SDKs (Swift, Kotlin, React Native, Flutter) are on the upstream roadmap. If the user picked **Native app** and wants something other than the WebView route, do not improvise one: point them at support@tiun.io for the current native integration path.
+There are two mobile routes:
+
+- **React Native** has its own SDK, `@tiun/react-native-sdk` — a **different package with a different API surface**: a `<TiunProvider>` plus `useTiun()` / `useTiunEvent()` hooks rather than the `tiun` singleton, its own configuration (`host` instead of `sandbox`, a required `returnUrl`), and its own event payloads. It covers authentication, subscriptions, and one-time purchases — not time-based. See [react-native.md](react-native.md), and do **not** apply `@tiun/sdk` code (`tiun.init`, `tiun.on`, `sandbox: true`) to a React Native app.
+- **Native shells hosting web content** (`WKWebView` / `Android WebView`) run the web SDK unchanged inside the WebView — see [frameworks.md](frameworks.md).
+
+Swift, Kotlin, and Flutter SDKs remain on the upstream roadmap. If the user wants one of those, do not improvise: point them at support@tiun.io.
 
 ## Environments — live and sandbox
 
 tiun runs **two fully independent parallel environments**. Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, customers, sessions, and analytics. Nothing syncs between them.
 
-- **Live** — real customers, real payments, your production domain. `localhost` is blocked.
+- **Live** — real customers, real payments, your live domain and/or app scheme (Settings → Environment setup). `localhost` is blocked.
 - **Sandbox** — simulated payments, test customers, `localhost` enabled by default on any port.
 
-You select an environment by setting (or omitting) `sandbox: true` in `tiun.init`. The SDK routes to the matching API host automatically. See [installation.md](installation.md) for the full setup.
+You select an environment by setting (or omitting) `sandbox: true` in `tiun.init`. The SDK routes to the matching API host automatically. See [installation.md](installation.md) for the full setup. (React Native uses `host` instead — see [react-native.md](react-native.md#environments-host-not-sandbox).)
 
 ## The three modes
 
@@ -45,17 +50,42 @@ You select an environment by setting (or omitting) `sandbox: true` in `tiun.init
 
 A single tiun account can offer any combination at once. `user.productAccess[]` mixes subscription and one-time entitlements freely — the array itself does not distinguish them, so gate on the specific product ID you care about.
 
+## Hosted UI is a black box
+
+Checkout, login, and the time-based connect overlay are rendered by tiun inside shadow DOM. They ship as-is: the integrator opens them and does not touch what is inside.
+
+**Never:**
+
+- Pierce `shadowRoot` — no `querySelector`, `appendChild`, `innerHTML`, or `MutationObserver` against the overlay's internals.
+- Inject content into it: help text under the email field, hints, tooltips, badges, trust seals, banners, extra buttons.
+- Style it: host selectors, `::part()`, `::slotted()`, global `!important` overrides, or any rule written to reach inside.
+- Reposition, resize, wrap, or cover it with your own chrome.
+- Read data out of it, such as scraping the value of its email input.
+
+This is a hard line, not a preference. The overlay's internal structure is unversioned and changes without notice, so an injection that works today breaks silently on the next snippet release — and it breaks *inside a live payment flow*, where the failure mode is a customer who cannot pay.
+
+**The supported surfaces are:**
+
+| Want to change | Where |
+|---|---|
+| Overlay language | `tiun.init({ language })` — `'en' \| 'de' \| 'fr'` |
+| Copy style (formal / informal) | `tiun.init({ tone })` |
+| Product names, prices, intervals, fees | tiun dashboard (`my.tiun.business`) |
+| Anything else — branding, colors, custom fields, extra copy inside the overlay | Not client-side. Ask support@tiun.io whether the dashboard exposes it. |
+
+**If a customer wants extra explanation around payment**, it belongs on their own page, next to the button that opens the overlay — before it opens. That surface is fully theirs and never breaks.
+
 ## Core mental model
 
 1. **Init once** with `tiun.init({ snippetId })` early in app startup. `init` is idempotent.
 2. **Wait for ready** before relying on snippet state (`tiun.waitForReady()` or the `ready` event). Methods like `checkout` / `login` / `start` queue internally.
 3. **Subscribe to events** (`userChange`, `paywallShow` / `paywallHide`, `login`, `logout`, `error`) to drive UI state.
-4. **Open hosted overlays** (`checkout`, `login`, `start`); do not build your own payment UI.
+4. **Open hosted overlays** (`checkout`, `login`, `start`); do not build your own payment UI, and do not modify tiun's — see [Hosted UI is a black box](#hosted-ui-is-a-black-box).
 5. **Verify on the server** when access must be trusted — see [server-verification.md](server-verification.md).
 
 ## Dashboard
 
-Product configuration, analytics, snippet IDs, and API keys live at `my.tiun.business`. The dashboard has a Sandbox toggle in the sidebar that switches which environment you're viewing/editing.
+Product configuration, analytics, snippet IDs, and API keys live at `my.tiun.business`. The dashboard has a Sandbox toggle in the sidebar that switches which environment you're viewing/editing; the first click enables sandbox (no setup required). Where tiun may run — the live domain and/or app scheme — is configured per environment in **Settings → Environment setup**.
 
 ## Products are configured in the dashboard. There is no runtime product-list API.
 

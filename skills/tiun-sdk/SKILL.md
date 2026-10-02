@@ -1,11 +1,11 @@
 ---
 name: tiun-sdk
-description: Use when integrating or debugging the tiun SDK (@tiun/sdk), tiun's JavaScript library for authentication, subscription billing, one-time purchases, and time-based paywalls. Triggers on imports of `@tiun/sdk`, calls like `tiun.init`, `tiun.checkout`, `tiun.login`, `tiun.start`, or questions about tiun products, entitlements, one-time purchases, lifetime access, fixed fees, time-based sessions, or server-side verification.
+description: Use when integrating or debugging tiun — the web SDK (@tiun/sdk) or the React Native SDK (@tiun/react-native-sdk) — for authentication, subscription billing, one-time purchases, and time-based paywalls. Triggers on imports of `@tiun/sdk` or `@tiun/react-native-sdk`, calls like `tiun.init`, `tiun.checkout`, `tiun.login`, `tiun.start`, `TiunProvider`, `useTiun`, `useTiunEvent`, or questions about tiun products, entitlements, one-time purchases, lifetime access, fixed fees, time-based sessions, checkout return deep links, or server-side verification.
 ---
 
 # tiun SDK skill
 
-Use this skill whenever the user is integrating, extending, or debugging code that uses `@tiun/sdk`. Authoritative upstream docs: https://docs.tiun.io/llms-full.txt.
+Use this skill whenever the user is integrating, extending, or debugging code that uses `@tiun/sdk` or `@tiun/react-native-sdk`. Authoritative upstream docs: https://docs.tiun.io/llms-full.txt.
 
 ## What tiun is
 
@@ -19,7 +19,11 @@ Install: `npm install @tiun/sdk`. Init: `tiun.init({ snippetId, language: 'en' }
 
 tiun runs **live and sandbox as two independent parallel environments**. The SDK's `sandbox` flag selects which one — see [references/installation.md](references/installation.md).
 
+**React Native is a separate SDK.** `@tiun/react-native-sdk` uses `<TiunProvider>` + `useTiun()` / `useTiunEvent()`, selects the environment with `host` (no `sandbox` flag), needs a `returnUrl` deep link, and covers subscriptions and one-time purchases only. Everything about it is in [references/react-native.md](references/react-native.md). The `tiun.*` code, Minimal working example, and per-framework wiring below are **web-only** — never generate them in a React Native app.
+
 ## Step 0 — Discovery before code
+
+**Platform first.** Check the project before asking anything: a `react-native` dependency in `package.json` (or `ios/` + `android/` folders) means React Native → follow [references/react-native.md](references/react-native.md) alongside this discovery; otherwise it's the web SDK. In React Native, time-based is not available — if the user asks for it, say so in 0b.
 
 Before writing any integration code, establish four things. Ask only for items the user has not already stated. If their prompt is fully specified ("wire up subscription with product `p-test-pro` in sandbox to gate `/watch/*`"), skip discovery.
 
@@ -47,7 +51,7 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 **0d. Identify what to gate.** Without this step the agent is generating boilerplate with no target. Ask:
 
 - Which routes/components/features require access?
-- What should non-authenticated users see? (inline login + checkout buttons / redirect to pricing page / full-screen paywall / teaser + subscribe)
+- What should signed-out users see, and how does the app's journey start? (offering or pricing page / account-first app where users sign in before meeting an upgrade / full-screen paywall / teaser + subscribe). Keep the journey the app is built for.
 - What should authenticated-but-no-access users see? (typically the same UX with "upgrade" copy)
 - Is there a free preview? (If yes, this is often a cue the user actually wants **time-based**, not subscription — feed back into 0b.)
 - For multi-tier: which routes/features map to which tier?
@@ -58,37 +62,40 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 |---|---|
 | Discovery, scoping, MCP detection, mode selection | [references/discovery.md](references/discovery.md) |
 | MCP installation per client, detection, auth | [references/mcp.md](references/mcp.md) |
-| What tiun is, supported platforms, product model | [references/overview.md](references/overview.md) |
+| What tiun is, supported platforms, product model, hosted-UI boundaries | [references/overview.md](references/overview.md) |
 | Install / init / config / per-host env injection | [references/installation.md](references/installation.md) |
 | Method or property lookup | [references/api-reference.md](references/api-reference.md) |
 | Event names and payloads | [references/events.md](references/events.md) |
-| Subscription gating (accounts + recurring billing) | [references/subscriptions.md](references/subscriptions.md) |
+| Subscription gating (accounts + recurring billing), choosing checkout vs login | [references/subscriptions.md](references/subscriptions.md) |
 | One-time purchase gating (fixed fee, permanent access) | [references/one-time.md](references/one-time.md) |
 | Time-based paywall (per-session, anonymous, metered) | [references/time-based.md](references/time-based.md) |
 | Trusted backend authorization | [references/server-verification.md](references/server-verification.md) |
 | Framework wiring (any stack) + lifecycle matrix | [references/frameworks.md](references/frameworks.md) |
-| "Overlay not appearing", SSR errors, sandbox mismatch | [references/troubleshooting.md](references/troubleshooting.md) |
+| "Overlay not appearing", SSR errors, sandbox mismatch, broken overlay injections | [references/troubleshooting.md](references/troubleshooting.md) |
+| React Native: install, return deep link, `TiunProvider`, hooks, `host`, device testing | [references/react-native.md](references/react-native.md) |
 
 ## Load-bearing rules
 
 1. **`tiun.init({ snippetId, language })` runs on the client**, early in startup. In Next.js/Nuxt, wrap in a client-only component/plugin. Never call it on the server. `init` is **idempotent** — calling it again merges config rather than re-initializing, so no `isInitialized` guard is needed.
 2. **`snippetId` is not a secret.** It identifies the environment. Use `NEXT_PUBLIC_*` / `public` runtime config.
-3. **`userChange` is the source of truth for checkout-based gating** (subscriptions and one-time purchases), not a one-shot `tiun.user` read. Entitlements change mid-session. The payload includes `event: 'init' | 'login' | 'checkout' | 'logout' | 'update'` for cases where you need to know what triggered the change.
+3. **`userChange` is the source of truth for checkout-based gating** (subscriptions and one-time purchases), not a one-shot `tiun.user` read. Entitlements change mid-session. In the web SDK the payload includes `event: 'init' | 'login' | 'checkout' | 'logout' | 'update'` for cases where you need to know what triggered the change. **React Native's payload has no `event` field** — use the separate `login` / `logout` events there.
 4. **Never trust the client for authorization.** For protected server resources: `tiun.getUserVerificationToken()` returns a JWT (5-minute lifetime), send it to your backend, the backend validates it via `POST /live_api/s2s/v1/users/verification` with `X-TIUN-API-KEY`. For time-based, use the `sessionId` from `paywallHide` against `PATCH /live_api/s2s/v1/sessions/{sessionId}/status`. See `references/server-verification.md`.
-5. **Do not reimplement checkout/login UIs.** tiun hosts them. Call `tiun.checkout({ productId })`, `tiun.login()`, or `tiun.start()` to open them.
+5. **The hosted UI is a black box — do not reimplement it and do not modify it.** tiun renders checkout, login, and the connect overlay in shadow DOM. Open them with `tiun.checkout({ productId })`, `tiun.login()`, or `tiun.start()`, and stop there. Never pierce `shadowRoot` to query, append, or observe nodes; never inject text, tooltips, badges, or banners into it; never target it with CSS (host selectors, `::part`, `::slotted`, `!important` overrides); never reposition or wrap it; never read values out of its inputs. Its internal structure is unversioned and changes without notice, and it sits inside a payment flow — an injection breaks silently and takes checkout down with it. The only supported surfaces are `init()` config (`language`, `tone`) and dashboard settings. **If the customer needs extra copy or explanation, put it on their own page next to the trigger, before the overlay opens** — not inside it. Anything the config and dashboard do not expose is a request to support@tiun.io, not a client-side patch. See [references/overview.md](references/overview.md#hosted-ui-is-a-black-box).
 6. **Methods before `ready` may queue or no-op.** Methods like `checkout`/`login`/`start`/`setContent`/`logout` already call `ensureInitialized()` and `await this.waitForReady()` internally — no need to wrap them.
 7. **Unsubscribe handlers** returned from `tiun.on(...)` on component unmount to avoid stale listeners. Or call `tiun.destroy()` if the whole subtree is going away.
-8. **Live and sandbox are independent parallel environments.** Each has its own snippet ID, products, product-ID prefix (`p-live-...` vs `p-test-...`), API keys, and API base URL (`https://api.tiun.live` vs `https://api-sandbox.tiun.live`). The SDK's `sandbox` flag must match the dashboard view and the product-ID prefix, or checkout silently fails. `localhost` is blocked in live and enabled by default in sandbox.
+8. **Live and sandbox are independent parallel environments.** Each has its own snippet ID, products, product-ID prefix (`p-live-...` vs `p-test-...`), API keys, and API base URL (`https://api.tiun.live` vs `https://api-sandbox.tiun.live`). The environment switch (`sandbox` flag on web, `host` in React Native) must match the dashboard view and the product-ID prefix, or checkout silently fails. `localhost` is blocked in live and enabled by default in sandbox. Each environment has its own **Settings → Environment setup** (live domain for web, app scheme for apps).
 9. **No runtime product-list API.** Products are configured in the tiun dashboard (`my.tiun.business`) and referenced by hardcoded `productId` strings. Do not invent methods like `tiun.getProducts()` or REST endpoints; direct users to the dashboard.
 10. **No webhooks.** tiun does not emit webhooks. For backend integration, drive state from the JWT returned by `getUserVerificationToken()` or the `sessionId` from `paywallHide`. Do not invent webhook endpoints or event payloads.
 11. **Stay upstream-faithful.** All code examples must match https://docs.tiun.io. If a pattern isn't documented upstream (custom SSR wiring, multi-env setups, backend SDKs in other languages, etc.), point the user at the upstream docs rather than inventing a snippet.
 12. **Do not infer integration mode from the account's product inventory.** Always confirm with the user (see "Step 0"). What the MCP reports is what *exists*; it does not report what the integrator *wants to build*.
 13. **A one-time product ID in `productAccess` is permanent.** It enters at checkout and never leaves — `event: 'update'` never removes it. Do **not** generate expiry, renewal, cancellation, trial, or revocation handling for a one-time product; that is dead code for state that cannot occur. Renewal and cancellation belong to subscriptions only. See `references/one-time.md`.
 14. **Do not wrap SDK methods to add `isInitialized` / `waitForReady` guards.** `tiun.checkout`, `tiun.login`, `tiun.start`, `tiun.setContent`, and `tiun.logout` already do both internally. Wrapper helpers around these methods are noise.
-15. **Do not pass `baseUrl` to `init()`.** It is an internal-only field reserved for tiun's own infrastructure. Use `sandbox: true` for non-production environments; that is the only public environment switch. The SDK routes to the matching API host automatically.
+15. **Do not pass `baseUrl` to `init()`.** It is an internal-only field reserved for tiun's own infrastructure. In the web SDK, use `sandbox: true` for non-production environments; that is the only public environment switch, and the SDK routes to the matching API host automatically. (React Native is the exception: it has no `sandbox` flag and selects the environment with `host` — see `references/react-native.md`.)
 16. **`language` is a closed enum**: `'en' | 'de' | 'fr'`, case-insensitive. Unsupported values trigger a one-time console warning and fall back to `'en'`. Do not generate other values.
 17. **Do not branch app logic on `error.code`.** It's a string but there's no published enum; codes can change between SDK versions. Display `err.message` to users and log `err.code` for support.
 18. **Write runtime config to files the bundler actually loads.** `.env.example` is documentation and is never evaluated. Vite loads `.env` / `.env.local`; Next.js loads `.env.local` and requires the `NEXT_PUBLIC_*` prefix for client-exposed values; Nuxt loads via `runtimeConfig.public` in `nuxt.config.ts`. See `references/installation.md` for the per-host table.
+19. **Use authentication for account entry and checkout for purchases.** Signing up or signing in → `tiun.login()`; buying a product or plan → `tiun.checkout({ productId })`; signing out → `tiun.logout()`. Choose by the action's purpose, not its label. Checkout handles the authentication and returning-customer cases that come with purchasing, so a purchase action opens it directly rather than routing through a separate login. This is about what a purchase action opens, not about app structure — purchase-first and account-first journeys are both valid. See `references/subscriptions.md` → "Choosing checkout or login".
+20. **React Native checkout needs one scheme in three places.** The dashboard's **Settings → Environment setup → App scheme** (e.g. `myapp://`), the native registration (iOS `Info.plist` + `RCTLinkingManager` forwarding in `AppDelegate`; Android intent filter + `android:launchMode="singleTask"`), and the `returnUrl` in `TiunConfig` (e.g. `myapp://tiun/return`). Reuse the app's existing scheme rather than inventing one, and tell the user to register it in the dashboard for the environment `host` points at. Any mismatch means payment succeeds but checkout never returns. See `references/react-native.md`.
 
 ## Minimal working example
 
@@ -121,4 +128,8 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 - User asks "how do I list products?" / "get all products?" → products are configured in the dashboard at `my.tiun.business`; there is no runtime product-list API. (The MCP exposes inventory to the agent for setup; this is not a runtime SDK feature.)
 - User mentions "verify on the backend", "protect API", "trust the client" → server verification (`X-TIUN-API-KEY` header; per-environment base URLs).
 - User mentions sandbox / `localhost` / "why won't it work locally" → confirm `sandbox: true` + sandbox snippet ID + `p-test-...` product IDs (live is hard-blocked on `localhost`).
+- User asks to restyle the overlay, relabel its fields, or add help text / a note / a tooltip inside checkout or login → not supported. The overlay's internals are off limits (Rule 5); put the copy on their own page next to the trigger, and route branding requests to support@tiun.io.
+- User is wiring purchase, sign-in, or sign-out actions → match each to its purpose: purchases open `tiun.checkout({ productId })`, account entry opens `tiun.login()`, sign-out calls `tiun.logout()`. Keep the app's existing journey (Rule 19).
 - Errors like "overlay doesn't appear", "methods called before ready" → troubleshooting.
+- Project is React Native, or user mentions `@tiun/react-native-sdk`, `TiunProvider`, `useTiun`, "iOS/Android app", "deep link", "returnUrl", "checkout doesn't come back to the app" → [references/react-native.md](references/react-native.md). Not the WebView section of frameworks.md, and not `@tiun/sdk`.
+- User wants time-based billing in a React Native app → not supported by the React Native SDK; say so and point at support@tiun.io.

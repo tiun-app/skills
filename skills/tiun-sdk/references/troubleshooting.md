@@ -12,6 +12,11 @@
 - **Product ID prefix doesn't match environment.** `p-live-...` only works with the live environment (no `sandbox` flag); `p-test-...` only works when `sandbox: true`. Mismatched prefixes produce silent failures.
 - **Dashboard sandbox toggle vs SDK `sandbox` flag are out of sync.** Both must point at the same environment.
 - **Live + `localhost`.** `localhost` is blocked in live; use `sandbox: true` with a sandbox snippet ID for local development.
+- **Domain not registered.** Works locally but not on a deployed site → the site's domain isn't in **Settings → Environment setup → Web** for that environment. One domain per environment is self-service; additional ones go through support@tiun.io.
+
+## React Native
+
+See the troubleshooting table in [react-native.md](react-native.md#troubleshooting). The most common one: payment succeeds but checkout never returns to the app → the scheme differs between the dashboard App scheme, the native registration, and `returnUrl`, or iOS is missing `RCTLinkingManager` forwarding, or Android is missing `android:launchMode="singleTask"`.
 
 ## `userChange` never fires
 
@@ -29,6 +34,10 @@
 - **Wrong header name**: it's `X-TIUN-API-KEY`. (Older example code referencing `X-ACCESS-TOKEN` is out of date.)
 - **404 on session verification**: the session has expired, was invalidated, or the user is out of funds — fail closed and deny the request.
 
+## Custom markup or styles inside the overlay stopped working
+
+Expected. The overlay's internals are shadow DOM, unversioned, and change without notice — see [overview.md](overview.md#hosted-ui-is-a-black-box). Remove the injection or CSS override rather than repairing it: a patched selector will break again, and it breaks inside checkout. Move the copy onto your own page next to the trigger, and take branding or extra-field requests to support@tiun.io.
+
 ## `error` event codes look unfamiliar
 
 `err.code` is a string but is **not** a stable enum. Display `err.message` to users, log `err.code` for support, and do not branch application logic on specific codes — they can change between SDK versions.
@@ -43,3 +52,7 @@
 | Sandbox payments not working | App and dashboard on different envs | Use sandbox snippet ID + `p-test-...` + `sandbox: true`; dashboard sandbox toggle on |
 | User state not updating | Relying only on `tiun.user` snapshot | Listen for `userChange` and update from the event payload |
 | Session not restoring | Different browser or cleared storage | Sessions are per-browser; clearing cookies/site data clears the session |
+| Works locally, fails on deployed site | Domain not registered for that environment | Add it in Settings → Environment setup → Web (extra domains via support@tiun.io) |
+| RN: payment succeeds, app never resolves checkout | Return scheme mismatch or missing native forwarding | Match dashboard App scheme ↔ native registration ↔ `returnUrl`; check `RCTLinkingManager` (iOS) and `singleTask` (Android) — see [react-native.md](react-native.md) |
+| Injected help text / CSS inside the overlay vanished | Overlay internals are shadow DOM and change without notice | Remove the injection; put the copy on your own page next to the trigger |
+| Purchase button opens login instead of checkout | Handler branches on auth state, or runs `login()` first | Open `tiun.checkout({ productId })` from the purchase action — see [subscriptions.md](subscriptions.md#choosing-checkout-or-login) |

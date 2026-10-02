@@ -37,7 +37,7 @@ tiun.init({
 
 `tiun.init()` is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
 
-The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 14 in `SKILL.md`).
+The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 15 in `SKILL.md`).
 
 ### Config options
 
@@ -77,9 +77,15 @@ tiun.init({ snippetId: 'YOUR_LIVE_SNIPPET_ID', language: 'en' });
 
 The dashboard has a sandbox toggle that switches which environment you are viewing/editing. Keep the SDK's `sandbox` flag aligned with the dashboard view while you're working, or snippet IDs and product IDs will not line up with what the dashboard shows.
 
+**Environment setup (registered domain).** The domain the SDK runs on must be registered — that registration is what authorizes it (CORS). It lives in the dashboard under **Settings → Environment setup → Web → Live domain**, and each environment (live and sandbox) has its own. The integrator enters **one** domain per environment; any additional domains are managed by tiun via support@tiun.io. The same page holds the **App** section (an app scheme) used by the React Native SDK — see [react-native.md](react-native.md).
+
+Enabling sandbox needs no domain: the first click on the dashboard's **Sandbox** toggle opens a dialog with a plain **Enable** button. Until live is configured, the dashboard prompts "Set up your live environment", which leads to the same Environment setup page.
+
+A request from an unregistered domain fails the same way a wrong snippet ID does. When a deploy works locally but not on a hosted site, check that its domain is in **Settings → Environment setup** for the matching environment before re-checking IDs.
+
 **`localhost` handling:**
 
-- Live: `localhost` is **blocked**. Use live only from your registered production domains.
+- Live: `localhost` is **blocked**. Use live only from your registered live domain.
 - Sandbox: `localhost` is **enabled by default on any port** — no explicit registration needed. Most teams develop locally with `sandbox: true` and a sandbox snippet ID.
 
 ## Where to put `snippetId` per host
