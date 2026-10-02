@@ -45,7 +45,7 @@ Once checkout completes, the product ID enters `productAccess` and **never leave
 The same customer also **cannot buy it a second time**. tiun blocks the repeat purchase before any money moves:
 
 - **Signed in and already entitled** → checkout links the existing entitlement instead of charging, and the customer is shown an "already purchased — no new charge was made" screen.
-- **Signed out** → if they enter the email that already owns it, checkout shows its already-purchased experience; they can also choose the sign-in option inside checkout.
+- **Signed out** → checkout signs them in with their email; once it recognizes them as the owner, it shows the same "already purchased" screen instead of payment details. Nothing is charged.
 
 So a one-time product is a **perpetual licence, not a consumable**. It is not a shop item that can be re-ordered: there are no quantities, carts, credit packs, tickets, or "buy another" flows. If the user wants customers to buy the *same* thing more than once, tiun does not model that — say so rather than wiring it up.
 

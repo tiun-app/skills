@@ -52,9 +52,9 @@ If you'd rather wire it up by hand, clone and copy `skills/tiun-sdk/` into your 
 
 | Skill    | Useful for                                                                                                                                                                                                                                                                                                                                                            |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| tiun-sdk | Wiring up `@tiun/sdk`: subscription and one-time-purchase gating with `userChange` and `productAccess`, time-based paywalls with `tiun.start()` and `paywallShow` / `paywallHide`, hosted checkout/login, server-side verification, and framework setup for vanilla JS, React, Vue 3, Nuxt, Next.js, Svelte, Solid, Astro, Angular, and mobile WebViews. Includes a mandatory discovery step before generating code. |
+| tiun-sdk | Wiring up `@tiun/sdk`: subscription and one-time-purchase gating with `userChange` and `productAccess`, time-based paywalls with `tiun.start()` and `paywallShow` / `paywallHide`, hosted checkout/login, server-side verification, framework setup for vanilla JS, React, Vue 3, Nuxt, Next.js, Svelte, Solid, Astro, Angular, and mobile WebViews, and React Native apps with `@tiun/react-native-sdk` (`TiunProvider`, hooks, checkout return deep links). Includes a mandatory discovery step before generating code. |
 
-The skill triggers automatically on imports of `@tiun/sdk`, calls like `tiun.init` / `tiun.checkout`, and questions about tiun products, entitlements, or one-time purchases.
+The skill triggers automatically on imports of `@tiun/sdk` or `@tiun/react-native-sdk`, calls like `tiun.init` / `tiun.checkout` / `useTiun`, and questions about tiun products, entitlements, or one-time purchases.
 
 ## MCP server
 

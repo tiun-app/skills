@@ -76,6 +76,7 @@ Each provider the MCP returns is tagged sandbox or live. If the user has both:
 
 - Use **sandbox providers + sandbox snippet ID + `sandbox: true`** for local development (live is hard-blocked on `localhost`).
 - Use **live providers + live snippet ID** (no `sandbox` flag) for production deploys.
+- In React Native, the same pairing applies, but the environment is selected with `host` (`https://api-sandbox.tiun.live` for sandbox, omitted for live) — see [react-native.md](react-native.md).
 
 Ground discovery questions in inventory — e.g. "you have a sandbox provider and a live provider; should I wire up the sandbox one for local dev?" — rather than asking blind.
 

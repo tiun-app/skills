@@ -24,23 +24,23 @@ The SDK is a single JavaScript library (`@tiun/sdk`) that works in:
 
 Supported payment methods: credit/debit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, Google Pay, and TWINT (region-dependent).
 
-**Mobile / native.** Setting up live in the dashboard asks the integrator to pick a platform — **Web app** or **Native app** — which tells tiun how to deliver the SDK and what kind of integration they are building.
+**Mobile / native.** In the dashboard, **Settings → Environment setup** has a **Web** section (one live domain) and an **App** section (one app scheme, for iOS/Android). The integrator turns on either or both, per environment.
 
 There are two mobile routes:
 
-- **React Native** has its own shipped SDK, `@tiun/react-native-sdk`. It is a **different package with a different API surface** — a `TiunProvider` / `useTiun()` pair rather than the `tiun` singleton, its own configuration, and its own event payloads. **This skill does not cover it yet.** Send the user to the "Monetize in React Native" guide on [docs.tiun.io](https://docs.tiun.io), and do **not** apply this skill's rules, config, or code to a React Native app — `@tiun/sdk` patterns do not transfer.
+- **React Native** has its own SDK, `@tiun/react-native-sdk` — a **different package with a different API surface**: a `<TiunProvider>` plus `useTiun()` / `useTiunEvent()` hooks rather than the `tiun` singleton, its own configuration (`host` instead of `sandbox`, a required `returnUrl`), and its own event payloads. It covers authentication, subscriptions, and one-time purchases — not time-based. See [react-native.md](react-native.md), and do **not** apply `@tiun/sdk` code (`tiun.init`, `tiun.on`, `sandbox: true`) to a React Native app.
 - **Native shells hosting web content** (`WKWebView` / `Android WebView`) run the web SDK unchanged inside the WebView — see [frameworks.md](frameworks.md).
 
-Swift, Kotlin, and Flutter SDKs remain on the upstream roadmap. If the user picked **Native app** and wants one of those, do not improvise: point them at support@tiun.io.
+Swift, Kotlin, and Flutter SDKs remain on the upstream roadmap. If the user wants one of those, do not improvise: point them at support@tiun.io.
 
 ## Environments — live and sandbox
 
 tiun runs **two fully independent parallel environments**. Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, customers, sessions, and analytics. Nothing syncs between them.
 
-- **Live** — real customers, real payments, your production domain. `localhost` is blocked.
+- **Live** — real customers, real payments, your live domain and/or app scheme (Settings → Environment setup). `localhost` is blocked.
 - **Sandbox** — simulated payments, test customers, `localhost` enabled by default on any port.
 
-You select an environment by setting (or omitting) `sandbox: true` in `tiun.init`. The SDK routes to the matching API host automatically. See [installation.md](installation.md) for the full setup.
+You select an environment by setting (or omitting) `sandbox: true` in `tiun.init`. The SDK routes to the matching API host automatically. See [installation.md](installation.md) for the full setup. (React Native uses `host` instead — see [react-native.md](react-native.md#environments-host-not-sandbox).)
 
 ## The three modes
 
@@ -85,7 +85,7 @@ This is a hard line, not a preference. The overlay's internal structure is unver
 
 ## Dashboard
 
-Product configuration, analytics, snippet IDs, and API keys live at `my.tiun.business`. The dashboard has a Sandbox toggle in the sidebar that switches which environment you're viewing/editing.
+Product configuration, analytics, snippet IDs, and API keys live at `my.tiun.business`. The dashboard has a Sandbox toggle in the sidebar that switches which environment you're viewing/editing; the first click enables sandbox (no setup required). Where tiun may run — the live domain and/or app scheme — is configured per environment in **Settings → Environment setup**.
 
 ## Products are configured in the dashboard. There is no runtime product-list API.
 

@@ -7,7 +7,7 @@
     {
       "name": "tiun-sdk",
       "source": "./",
-      "description": "Skills for integrating and debugging the tiun SDK (@tiun/sdk)"
+      "description": "Skills for integrating and debugging the tiun SDKs (@tiun/sdk and @tiun/react-native-sdk)"
     }
   ]
 }
