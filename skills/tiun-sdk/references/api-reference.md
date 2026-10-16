@@ -7,6 +7,7 @@ All methods are on the `tiun` singleton imported from `@tiun/sdk`.
 | Method | Purpose |
 |---|---|
 | `tiun.init(config)` | Initialize the SDK. **Idempotent** — calling again on an initialized instance merges config rather than re-initializing. See [installation.md](installation.md) for config. |
+| `tiun.setAppearance(appearance)` | Switch the snippet color theme to `'light'`, `'dark'`, or `'auto'` without a reload. Safe to call before `init()` or before the snippet is ready. |
 | `tiun.destroy()` | Tear down the instance, clearing listeners, runtime config, and cached user state. **Only call where the subtree can remount** — see the lifecycle matrix in [frameworks.md](frameworks.md). Not needed at an SPA root. |
 | `tiun.waitForReady()` | Returns a Promise resolving when the snippet is loaded. |
 | `tiun.on(event, cb)` | Subscribe to an event. Returns an unsubscribe function. |
