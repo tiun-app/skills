@@ -84,7 +84,7 @@ Ground discovery questions in inventory — e.g. "this provider has a sandbox ro
 
 ### Quickstart (recommended)
 
-Install the skill — it works with any agent that supports the Agent Skills standard, and needs Node.js 18+. Sources live at https://github.com/tiun-app/skills. When you run the install yourself:
+Install the skill — it works with any agent that supports the Agent Skills standard, and needs Node.js 18+. When you run the install yourself:
 
 ```bash
 npx skills add https://mcp.tiun.business -y
