@@ -37,13 +37,13 @@ Use a structured question primitive (e.g. `AskQuestion`) if your client supports
 
 **0b. Establish integration mode.** Subscription, one-time purchase, time-based, or a combination? See [references/discovery.md](references/discovery.md) for cues that map user language to each mode. **Do not infer mode from the account's inventory.** A provider with only one product type today may be planning another tomorrow.
 
-**0c. Gather identifiers.** Questions depend on mode and MCP availability:
+**0c. Gather identifiers.** Questions depend on mode and MCP availability. The MCP returns one row per environment for the same `providerId` — a sandbox row and a live row are the same provider.
 
-- Subscription, MCP present → list providers, ask user to pick; list products, ask user to pick one or multiple tiers; confirm environment from the provider's sandbox/live tag.
+- Subscription, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick one or multiple tiers.
 - Subscription, no MCP → ask for `snippetId`; ask one product or multiple tiers; for each, ask `productId` and label; confirm sandbox or live (the `p-test-...` / `p-live-...` prefix is a strong hint).
-- One-time, MCP present → list providers, ask user to pick; list products, ask user to pick the product(s) to unlock; confirm environment from the provider's sandbox/live tag. Do not ask about tiers — one-time products are not tiered.
+- One-time, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick the product(s) to unlock. Do not ask about tiers — one-time products are not tiered.
 - One-time, no MCP → ask for `snippetId`; for each product, ask `productId` and label; confirm sandbox or live (prefix is a strong hint).
-- Time-based, MCP present → list providers, ask user to pick; confirm environment from provider tag.
+- Time-based, MCP present → list providers, ask user to pick the environment row.
 - Time-based, no MCP → ask for `snippetId`; confirm sandbox or live.
 
 When the MCP is present, ground questions in inventory ("you have a sandbox time-based product `p-test-xxx` — wire that up, or set up subscription products first?") rather than asking blind.
@@ -124,7 +124,7 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 - User says "buy once", "pay once", "one-time", "lifetime", "lifetime deal", "single payment", "unlock forever", "fixed fee", "perpetual license", "no subscription" → **one-time flow**. Route to one-time.md.
 - User says "article paywall", "watch a video then pay", "session", "no account needed", "donation prompt", "first N seconds free" → **time-based flow**. Route to time-based.md.
 - User says "videos behind a paywall", "premium content" (ambiguous) → **ask** which mode. Don't guess.
-- User says "how do I get my agent to integrate tiun?" / "set this up with an AI coding agent" → point at the upstream Agent integration guide on [docs.tiun.io](https://docs.tiun.io) and the `npx skills add tiun-app/skills` quickstart in `references/mcp.md`.
+- User says "how do I get my agent to integrate tiun?" / "set this up with an AI coding agent" → point at the upstream Agent integration guide on [docs.tiun.io](https://docs.tiun.io) and the quickstart in `references/mcp.md` (`npx skills add https://mcp.tiun.business`; add `-y` when you run it).
 - User asks "how do I list products?" / "get all products?" → products are configured in the dashboard at `my.tiun.business`; there is no runtime product-list API. (The MCP exposes inventory to the agent for setup; this is not a runtime SDK feature.)
 - User mentions "verify on the backend", "protect API", "trust the client" → server verification (`X-TIUN-API-KEY` header; per-environment base URLs).
 - User mentions sandbox / `localhost` / "why won't it work locally" → confirm `sandbox: true` + sandbox snippet ID + `p-test-...` product IDs (live is hard-blocked on `localhost`).
