@@ -27,7 +27,7 @@ import { tiun } from '@tiun/sdk';
 tiun.init({
   snippetId: 'YOUR_SNIPPET_ID', // required, from my.tiun.business
   language: 'en', // 'en' | 'de' | 'fr' (case-insensitive)
-  tone: 'formal', // 'formal' | 'informal'
+  tone: 'informal', // 'formal' | 'informal'
   debug: false, // console logging
   sandbox: false, // target sandbox environment
   onReady: () => {}, // optional, same as tiun.on('ready', ...)
@@ -45,7 +45,7 @@ The SDK automatically routes to the correct API host based on the `sandbox` flag
 | -------------------------------------------- | ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `snippetId`                                  | string                   | —          | **Required.** From dashboard; environment-specific.                                                                                        |
 | `language`                                   | `'en' \| 'de' \| 'fr'`   | `'en'`     | UI language for hosted overlays. Case-insensitive. Unsupported values trigger a one-time console warning and fall back to `'en'`.          |
-| `tone`                                       | `'formal' \| 'informal'` | `'formal'` | Copy style in overlays.                                                                                                                    |
+| `tone`                                       | `'formal' \| 'informal'` | `'informal'` | Copy style in overlays.                                                                                                                    |
 | `debug`                                      | boolean                  | `false`    | Enable console logging.                                                                                                                    |
 | `sandbox`                                    | boolean                  | `false`    | Target sandbox environment (`true`) or live (default). Selects the API host automatically; the snippet ID must match the same environment. |
 | `onReady` / `onError` / `onUserChange` / ... | function                 | —          | Optional event callbacks; equivalent to `tiun.on(...)`.                                                                                    |

@@ -61,9 +61,9 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 
 ### Subscription, MCP present
 
-1. List providers → ask user to pick (each provider is tagged sandbox or live).
-2. List products for chosen provider → ask user to pick one or multiple tiers. Suggest: "for multiple tiers, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-live-basic', pro: 'p-live-pro' }`."
-3. Confirm the environment from the provider tag; default to sandbox if both exist and the context is local dev.
+1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
+2. List products for the chosen provider and environment → ask user to pick one or multiple tiers. Suggest: "for multiple tiers, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-live-basic', pro: 'p-live-pro' }`."
+3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### Subscription, no MCP
 
@@ -74,9 +74,9 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 
 ### One-time, MCP present
 
-1. List providers → ask user to pick (each provider is tagged sandbox or live).
-2. List products for chosen provider → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means.
-3. Confirm the environment from the provider tag; default to sandbox if both exist and the context is local dev.
+1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
+2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means.
+3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### One-time, no MCP
 
@@ -86,8 +86,8 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 
 ### Time-based, MCP present
 
-1. List providers → ask user to pick (sandbox vs live tag visible).
-2. Confirm environment from provider tag.
+1. List providers → ask user to pick the environment row (one row per environment, same `providerId`).
+2. Confirm sandbox or live.
 
 ### Time-based, no MCP
 

@@ -7,10 +7,10 @@
 Works with any agent that supports the Agent Skills standard.
 
 ```
-npx skills add tiun-app/skills
+npx skills add https://mcp.tiun.business
 ```
 
-Requires [Node.js](https://nodejs.org/) 18+ (which provides `npx`) — Node 18 is past end-of-life, so a maintained LTS (20+) is recommended. The `skills` CLI figures out which agents you have installed and drops the skill in the right place.
+Requires [Node.js](https://nodejs.org/) 18+ (which provides `npx`) — Node 18 is past end-of-life, so a maintained LTS (20+) is recommended. The `skills` CLI figures out which agents you have installed and drops the skill in the right place. Skill sources live at [github.com/tiun-app/skills](https://github.com/tiun-app/skills).
 
 ### Alternative methods
 
