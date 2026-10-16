@@ -78,7 +78,7 @@ A single-type catalog is a reasonable **default to confirm**, not a decision: "I
 - Use the **live row + live snippet ID** (no `sandbox` flag) for production deploys.
 - In React Native, the same pairing applies, but the environment is selected with `host` (`https://api-sandbox.tiun.live` for sandbox, omitted for live) — see [react-native.md](react-native.md).
 
-Ground discovery questions in inventory — e.g. "this provider has a sandbox row and a live row; should I wire up sandbox for local dev?" — rather than asking blind.
+Ground discovery questions in inventory — e.g. "You have both a sandbox and a live environment set up. Should I use sandbox for local testing?" — rather than asking blind.
 
 ## Install
 
