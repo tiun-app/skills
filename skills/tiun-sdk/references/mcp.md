@@ -72,7 +72,7 @@ A single-type catalog is a reasonable **default to confirm**, not a decision: "I
 
 ## Sandbox and live are two rows for the same provider
 
-`providerId` is the same in sandbox and live. Every other id (snippet ID, products, and the rest) differs per environment. Sandbox and live are isolated environments running in parallel, and both can be in use at once — staging on sandbox, production on live. The MCP returns one row per environment for that `providerId`.
+`providerId` is the same in sandbox and live. Every other id (snippet ID, products, and the rest) differs per environment. Sandbox and live are isolated environments running in parallel, and both can be in use at once — sandbox for local testing and staging/test environments, live for production. The MCP returns one row per environment for that `providerId`.
 
 - Use the **sandbox row + sandbox snippet ID + `sandbox: true`** for local development (live is hard-blocked on `localhost`).
 - Use the **live row + live snippet ID** (no `sandbox` flag) for production deploys.
