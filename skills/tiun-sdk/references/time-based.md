@@ -20,7 +20,7 @@ The events are your single source of truth for the UI — do not poll, do not tr
 
 ## Flow
 
-1. Create a time-based product in the dashboard (fee for the fixed 1-minute interval, and a monthly limit). The interval is exactly 1 minute; a 60-minute or hourly interval cannot be configured. Copy the `productId` (`p-test-...` for sandbox, `p-live-...` for live).
+1. Create a time-based product in the dashboard (interval is 1 minute only; set the fee and monthly limit). Copy the `productId` (`p-test-...` for sandbox, `p-live-...` for live).
 2. `tiun.init({ snippetId, language: 'en' })` on app start.
 3. Start with the paywall visible — in time-based, the default state is locked.
 4. Listen for `paywallShow` / `paywallHide` to toggle paywall vs premium UI.
