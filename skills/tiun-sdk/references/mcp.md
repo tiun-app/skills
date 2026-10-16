@@ -55,12 +55,12 @@ The exact call signature is the MCP's to define, but the fields come from the da
 |---|---|
 | **Subscription** | Name (shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
 | **One-time** | Name and price. No interval, no trial — neither exists for this type |
-| **Time-based** | Name, a per-minute interval (no hour unit, interval count disabled), interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
+| **Time-based** | Name, an interval fixed at exactly **1 minute** (a 60-minute or hourly interval cannot be configured), interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
 
 Two that are easy to get wrong:
 
 - **A trial is two values, not a flag** — a trial length *and* a trial amount. Ask for both, or don't offer one.
-- **Time-based intervals are per minute only.** There is no hour unit, and the interval count is disabled.
+- **Time-based intervals are exactly 1 minute.** A 60-minute or hourly interval cannot be configured.
 
 Plus the tax category — required, no default, permanent (above).
 
