@@ -15,7 +15,7 @@
       "category": "development",
       "license": "MIT",
       "homepage": "https://tiun.io",
-      "keywords": ["tiun", "sdk", "authentication", "payments", "subscriptions", "one-time-purchases", "usage-based-billing", "checkout", "merchant-of-record", "mcp", "react-native"]
+      "keywords": ["tiun", "sdk", "authentication", "payments", "billing", "subscriptions", "one-time-purchases", "checkout", "merchant-of-record", "mcp", "react-native"]
     }
   ]
 }
