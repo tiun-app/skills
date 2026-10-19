@@ -1,7 +1,7 @@
 {
   "$schema": "https://code.claude.com/schemas/marketplace.json",
   "name": "tiun-sdk",
-  "description": "Agent skills for integrating tiun auth, payments, and checkout via @tiun/sdk and @tiun/react-native-sdk, with the tiun MCP to read your providers and products. tiun is one system for auth, payments, customer database, and analytics.",
+  "description": "Agent skills for integrating tiun auth, payments, and checkout into your web or React Native app, with the tiun MCP to read your providers and products. tiun is one system for auth, payments, customer database, and analytics.",
   "owner": {
     "name": "tiun",
     "url": "https://tiun.io"
@@ -11,7 +11,7 @@
       "name": "tiun-sdk",
       "displayName": "tiun SDK",
       "source": "./",
-      "description": "Integrate tiun auth, payments, and checkout via @tiun/sdk and @tiun/react-native-sdk, with the tiun MCP to read your providers and products.",
+      "description": "Integrate tiun auth, payments, and checkout into your web or React Native app, with the tiun MCP to read your providers and products.",
       "category": "development",
       "license": "MIT",
       "homepage": "https://tiun.io",

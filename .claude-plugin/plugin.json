@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "tiun-sdk",
   "displayName": "tiun SDK",
-  "description": "Integrate tiun auth, payments, and checkout via @tiun/sdk and @tiun/react-native-sdk: subscriptions, one-time purchases, and usage-based billing. Use the tiun MCP to read your providers and products.",
+  "description": "Integrate tiun auth, payments, and checkout into your web or React Native app: subscriptions, one-time purchases, and usage-based billing. Use the tiun MCP to read your providers and products.",
   "author": {
     "name": "tiun",
     "url": "https://tiun.io"
