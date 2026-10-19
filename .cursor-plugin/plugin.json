@@ -1,7 +1,7 @@
 {
   "name": "tiun-sdk",
   "displayName": "tiun SDK",
-  "description": "Integrate tiun auth, payments, and checkout into your digital product: subscriptions, one-time purchases, and usage-based billing. Use the tiun MCP to read your providers and products.",
+  "description": "Add tiun auth, payments, and checkout to your digital products, with subscriptions, one-time purchases, and usage-based billing. The tiun MCP sets up products and fetches IDs for you.",
   "author": {
     "name": "tiun",
     "url": "https://tiun.io"
