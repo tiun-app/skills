@@ -6,7 +6,7 @@ The tiun MCP server (`https://mcp.tiun.business/`) gives agents access to the us
 
 ## What it can do
 
-**Read the account.** Which providers the user has, each one's snippet ID, and which environment it belongs to. A provider's product catalog for one environment, including every product's ID, pricing type and price. And the tax categories a product can be filed under, with guidance for choosing between them.
+**Read the account.** Which providers the user has. The same `providerId` appears once per environment, and each row has that environment's snippet ID and product catalog (every product's ID, pricing type and price). And the tax categories a product can be filed under, with guidance for choosing between them.
 
 **Create and edit products.** One-time and subscription products can be created, and their name and pricing edited, so a missing product doesn't have to interrupt the integration. Time-based products are read-only here — they are created and edited in the dashboard.
 
@@ -47,30 +47,50 @@ Each product the MCP reports carries a **`pricingType`** — the only reliable s
 
 A product's price arrives in the block matching its pricing type, and each type has its own shape — the MCP documents them, so read the response rather than assuming a field. What matters when you report a price back to the user is that the three are not interchangeable: a one-time fee is charged once, a subscription price recurs on its interval, and a time-based fee is metered usage against a monthly cap. Never present a time-based fee as a subscription price.
 
+## What a product needs before you create one
+
+The exact call signature is the MCP's to define, but the fields come from the dashboard form and do not vary. Collect them from the user *before* calling a create tool — an abandoned half-specified create still leaves a product behind.
+
+| Type | Fields |
+|---|---|
+| **Subscription** | Name (shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
+| **One-time** | Name and price. No interval, no trial — neither exists for this type |
+| **Time-based** | Name, interval **1 minute only**, interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
+
+Two that are easy to get wrong:
+
+- **A trial is two values, not a flag** — a trial length *and* a trial amount. Ask for both, or don't offer one.
+- **Time-based intervals are 1 minute only.**
+
+Plus the tax category — required, no default, permanent (above).
+
 ## Inventory is not intent
 
 The MCP returns what *exists* in the user's account. It does **not** report what they want to build. Always confirm integration mode and chosen products with the user — see [discovery.md](discovery.md) Step 0b and 0c.
 
 A single-type catalog is a reasonable **default to confirm**, not a decision: "I see only one-time products — wire that up, or set up subscriptions first?" A mixed catalog means ask open-ended.
 
-## Sandbox and live providers are tagged separately
+## Sandbox and live are two rows for the same provider
 
-Each provider the MCP returns is tagged sandbox or live. If the user has both:
+`providerId` is the same in sandbox and live. Every other id (snippet ID, products, and the rest) differs per environment. Sandbox and live are isolated environments running in parallel, and both can be in use at once — sandbox for local testing and staging/test environments, live for production. The MCP returns one row per environment for that `providerId`.
 
-- Use **sandbox providers + sandbox snippet ID + `sandbox: true`** for local development (live is hard-blocked on `localhost`).
-- Use **live providers + live snippet ID** (no `sandbox` flag) for production deploys.
+- Use the **sandbox row + sandbox snippet ID + `sandbox: true`** for local development (live is hard-blocked on `localhost`).
+- Use the **live row + live snippet ID** (no `sandbox` flag) for production deploys.
+- In React Native, the same pairing applies, but the environment is selected with `host` (`https://api-sandbox.tiun.live` for sandbox, omitted for live) — see [react-native.md](react-native.md).
 
-Ground discovery questions in inventory — e.g. "you have a sandbox provider and a live provider; should I wire up the sandbox one for local dev?" — rather than asking blind.
+Ground discovery questions in inventory — e.g. "You have both a sandbox and a live environment set up. Should I use sandbox for local testing?" — rather than asking blind.
 
 ## Install
 
 ### Quickstart (recommended)
 
-Install the skill from tiun — it works with any agent that supports the Agent Skills standard, and needs Node.js 18+:
+Install the skill — it works with any agent that supports the Agent Skills standard, and needs Node.js 18+. When you run the install yourself:
 
 ```bash
-npx skills add https://mcp.tiun.business
+npx skills add https://mcp.tiun.business -y
 ```
+
+When you hand the command to the user, omit `-y`: `npx skills add https://mcp.tiun.business`.
 
 Then add the MCP server in the agent's MCP settings (Cursor: Settings → MCP; Claude Code: `claude mcp add ...`; etc.). Other installers — `gh skill`, the Claude Code plugin marketplace, a Cursor remote rule, or copying the skill in by hand — are listed in the [repo README](https://github.com/tiun-app/skills#installing).
 
@@ -88,6 +108,23 @@ Then add the MCP server in the agent's MCP settings (Cursor: Settings → MCP; C
 ```
 
 Paste this into your client's MCP config file. The exact location depends on the client.
+
+### If the client cannot complete browser sign-in
+
+Some agents cannot run the OAuth browser flow against a remote MCP server. Proxy it locally with `mcp-remote` instead of falling back to manual mode:
+
+```json
+{
+  "mcpServers": {
+    "tiun": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.tiun.business/"]
+    }
+  }
+}
+```
+
+Needs Node installed; it opens a browser window to authenticate on first connect.
 
 ### Per client
 

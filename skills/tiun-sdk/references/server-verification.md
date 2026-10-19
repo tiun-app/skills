@@ -2,12 +2,13 @@
 
 Trust nothing the client sends about its own entitlements. When access must be trusted (paid API endpoints, protected downloads, premium content payloads), verify on the server.
 
-There are two verification flows, depending on the product type:
+There are three server-side flows:
 
 - **User verification** — identity + `productAccess` entitlements. JWT-based. Use for **subscription and one-time purchase** gating and authenticated-only endpoints. Both are a `productAccess` check, so the code is identical; a one-time product ID simply never disappears from the array.
 - **Session verification** — time-based billing sessions. Session-ID-based. Use to confirm an active time-based session before serving premium content.
+- **User info lookup** — read a known user's current state by `userId`, with no session and no token. A read, **not** an authentication check. See [User info lookup](#user-info-lookup-read-a-known-users-state).
 
-Both use the same set of API keys (created in the dashboard under **APIs → Create new key**) and the same per-environment base URLs.
+All three use the same set of API keys (created in the dashboard under **APIs → Create new key**) and the same per-environment base URLs.
 
 ## Base URLs and API keys
 
@@ -80,6 +81,45 @@ if (hasPro) {
 }
 ```
 
+## User info lookup (read a known user's state)
+
+Reads the current state of a user you already have a `userId` for. No session, no token, no expiry.
+
+```
+GET {BASE_URL}/live_api/s2s/v1/users/{userId}/info
+X-TIUN-API-KEY: <your API key from the dashboard>
+```
+
+Response codes:
+
+| Status | Meaning |
+|---|---|
+| `200`  | User object returned — read the body. |
+| `400`  | Invalid request. |
+| `401`  | The API key is invalid. |
+| `404`  | No such user. |
+
+`200` response body:
+
+```json
+{
+  "userId": "u-...",
+  "email": "user@example.com",
+  "productAccess": ["p-live-pro"]
+}
+```
+
+### This is not an authentication substitute
+
+It is the easier call, so it is the one an agent reaches for by mistake. The difference decides which you need:
+
+| | Answers | Requires |
+|---|---|---|
+| **User verification** (JWT) | "Is the caller of *this request* that user, right now?" | A live session — the frontend fetches a fresh token |
+| **User info lookup** | "What does user `X` currently have?" | Only a `userId` you already trust |
+
+Authorizing a request with this endpoint means trusting a `userId` the caller supplied — anyone who knows or guesses another user's ID gets their entitlements. **Never authorize an incoming request with it.** Use it for work that happens outside a user session and already knows whose data it is: refreshing entitlements in your own database, a nightly reconciliation job, an admin or support screen, enriching a record after the JWT flow already established identity.
+
 ## Session verification (time-based)
 
 When `paywallHide` fires, its payload includes a `sessionId`. Send it to your backend on protected requests, and call the **Session** endpoint to confirm the session is still valid before serving premium content.
@@ -126,6 +166,7 @@ app.get('/api/premium-content', async (req, res) => {
 - **Do** fail closed. Reject when the token or session cannot be validated.
 - **Do** keep environments consistent: SDK `sandbox: true` → sandbox base URL + sandbox API key. Mixing produces silent 401s.
 - **Don't** cache verification results past the JWT's 5-minute lifetime, or past a session's `Active` window.
+- **Don't** authorize an incoming request with the user-info lookup. It trusts a `userId` the caller handed you, which is not authentication — use the JWT flow.
 - **Don't** expose the snippet ID or the `X-TIUN-API-KEY` as the same secret. The snippet ID is public and identifies an environment; the API key is a server secret.
 
 Full upstream API schema: [api.tiun.live/live_api/swagger/tiun_live_public/swagger.json](https://api.tiun.live/live_api/swagger/tiun_live_public/swagger.json).

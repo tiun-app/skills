@@ -2,6 +2,16 @@
 
 Before writing any tiun integration code, gather four pieces of information. Ask only for what the user has not already stated. Use a structured question primitive (`AskQuestion` or equivalent) if your client supports one; otherwise ask inline.
 
+## Platform (detect, don't ask)
+
+Look at the project first. A `react-native` dependency in `package.json`, or `ios/` + `android/` folders next to JS sources, means **React Native** → use `@tiun/react-native-sdk` and [react-native.md](react-native.md). Anything else running in a browser (including a native shell around a web app) → web SDK `@tiun/sdk`. Ask only if the project genuinely doesn't tell you.
+
+React Native changes discovery in three places:
+
+- **0b** — only subscription and one-time are available. If the user wants time-based in React Native, say it isn't supported and point at support@tiun.io.
+- **0c** — the environment is chosen with `host`, not `sandbox: true`. Also ask for the app's **URL scheme** (check `Info.plist` / `AndroidManifest.xml` first) — it becomes the `returnUrl` and must be entered in the dashboard's **Settings → Environment setup → App** for that environment.
+- **0d** — "routes" are screens / navigators, and there is no `localhost` question: testing happens on a physical iPhone or an Android emulator/device.
+
 ## 0a. MCP availability
 
 The tiun MCP server (`https://mcp.tiun.business/`) gives you live access to the user's dashboard: their providers and snippet IDs, the product catalog for either environment, and the ability to create and edit one-time and subscription products. Detect it by checking whether it is connected in your session. See [mcp.md](mcp.md) for what it can do, the rules that govern writing to a real account, and how to read a product's pricing type.
@@ -43,15 +53,17 @@ tiun runs two independent environments. Each has:
 - Its own product ID prefix: `p-test-...` for sandbox, `p-live-...` for live
 - Its own API keys (for server-side verification)
 
-`localhost` is blocked in live. Local development needs `sandbox: true` plus a sandbox snippet ID. Production deploys use live (no `sandbox` flag, live snippet ID, `p-live-...` product IDs).
+`localhost` is blocked in live. Local development needs `sandbox: true` plus a sandbox snippet ID. Production deploys use live (no `sandbox` flag, live snippet ID, `p-live-...` product IDs). In React Native, the same choice is made with `host` (`https://api-sandbox.tiun.live` for sandbox, omitted for live).
+
+Each environment also has its own **Settings → Environment setup** in the dashboard: a live domain (web) and/or an app scheme (apps). Sandbox works on `localhost` without any setup; hosted sites and apps need their domain or scheme registered in the environment they target.
 
 Confirm with the user *which* environment you're wiring — if both exist, default to sandbox for new local-dev scaffolding and ask only when ambiguous.
 
 ### Subscription, MCP present
 
-1. List providers → ask user to pick (each provider is tagged sandbox or live).
-2. List products for chosen provider → ask user to pick one or multiple tiers. Suggest: "for multiple tiers, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-live-basic', pro: 'p-live-pro' }`."
-3. Confirm the environment from the provider tag; default to sandbox if both exist and the context is local dev.
+1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
+2. List products for the chosen provider and environment → ask user to pick one or multiple tiers. Suggest: "for multiple tiers, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-live-basic', pro: 'p-live-pro' }`."
+3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### Subscription, no MCP
 
@@ -62,9 +74,9 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 
 ### One-time, MCP present
 
-1. List providers → ask user to pick (each provider is tagged sandbox or live).
-2. List products for chosen provider → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means.
-3. Confirm the environment from the provider tag; default to sandbox if both exist and the context is local dev.
+1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
+2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means.
+3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### One-time, no MCP
 
@@ -74,8 +86,8 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 
 ### Time-based, MCP present
 
-1. List providers → ask user to pick (sandbox vs live tag visible).
-2. Confirm environment from provider tag.
+1. List providers → ask user to pick the environment row (one row per environment, same `providerId`).
+2. Confirm sandbox or live.
 
 ### Time-based, no MCP
 
@@ -89,7 +101,7 @@ When MCP is present, ground questions in inventory:
 ## 0d. Gating scope
 
 - Which routes / components / features should require access? (Free-form, or multi-select if you've explored the routes file.)
-- What should non-authenticated users see? (Inline login + checkout buttons / redirect to `/pricing` / full-screen paywall overlay / teaser + subscribe button)
+- What should signed-out users see, and how does the app's journey start? (Offering or pricing page where visitors choose a plan / account-first app where users sign in before meeting an upgrade / full-screen paywall overlay / teaser + subscribe button.) Keep the journey the app is built for — see [subscriptions.md](subscriptions.md#choosing-checkout-or-login).
 - What should authenticated-but-no-access users see? (Usually the same UX with "upgrade" copy)
 - Is there a free preview? (e.g. first 30 seconds of video, first paragraph of article) — if yes, the user may actually want **time-based**; feed back into 0b.
 - For multi-tier: which routes/features map to which tier?
