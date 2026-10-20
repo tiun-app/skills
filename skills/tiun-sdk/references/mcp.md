@@ -64,6 +64,18 @@ Two that are easy to get wrong:
 
 Plus the tax category — required, no default, permanent (above).
 
+## Tax behavior
+
+Subscription and one-time products have a tax behavior setting: `Auto` (default), `Inclusive`, or `Exclusive`. The dashboard labels them Automatic, Include tax, and Exclude tax. `Auto` uses the end customer's location and applies that region's usual convention. Time-based products have no tax behavior setting.
+
+The MCP product tools take an optional `taxBehavior` with those values. Leave it on `Auto` and do not ask the user to confirm it. Set `Inclusive` or `Exclusive` only when the user explicitly says prices should include or exclude tax.
+
+| The user says | `taxBehavior` |
+|---|---|
+| "price includes VAT" | `Inclusive` |
+| "tax on top" | `Exclusive` |
+| "prices excluding tax" | `Exclusive` |
+
 ## Inventory is not intent
 
 The MCP returns what *exists* in the user's account. It does **not** report what they want to build. Always confirm integration mode and chosen products with the user — see [discovery.md](discovery.md) Step 0b and 0c.
