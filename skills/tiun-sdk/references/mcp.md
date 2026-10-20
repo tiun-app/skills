@@ -66,7 +66,7 @@ Plus the tax category — required, no default, permanent (above).
 
 ## Tax behavior
 
-Subscription and one-time products have a tax behavior setting: `Auto` (default), `Inclusive`, or `Exclusive`. The dashboard labels them Automatic, Include tax, and Exclude tax. `Auto` uses the end customer's location and applies that region's usual convention. Time-based products have no tax behavior setting.
+Subscription and one-time products have a tax behavior setting: `Auto` (default), `Inclusive`, or `Exclusive`. The dashboard labels them Automatic, Include tax, and Exclude tax. `Auto` uses the end customer's location and applies that region's usual convention.
 
 The MCP product tools take an optional `taxBehavior` with those values. Leave it on `Auto` and do not ask the user to confirm it. Set `Inclusive` or `Exclusive` only when the user explicitly says prices should include or exclude tax.
 
