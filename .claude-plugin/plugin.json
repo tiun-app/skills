@@ -1,10 +1,14 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "tiun-sdk",
-  "description": "Teaches AI coding agents how to integrate and debug the tiun SDKs (@tiun/sdk and @tiun/react-native-sdk) for authentication, subscription billing, one-time purchases, and time-based paywalls.",
+  "displayName": "tiun SDK",
+  "description": "Add tiun auth, payments, and checkout to your digital products, with subscriptions, one-time purchases, and usage-based billing. The tiun MCP sets up products and fetches IDs for you.",
   "author": {
     "name": "tiun",
     "url": "https://tiun.io"
   },
   "homepage": "https://tiun.io",
-  "repository": "https://github.com/tiun-app/skills"
+  "repository": "https://github.com/tiun-app/skills",
+  "license": "MIT",
+  "keywords": ["tiun", "sdk", "authentication", "payments", "billing", "subscriptions", "one-time-purchases", "checkout", "merchant-of-record", "mcp", "react-native"]
 }

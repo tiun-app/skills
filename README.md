@@ -35,7 +35,9 @@ Install through the [plugin marketplace](https://code.claude.com/docs/en/discove
 
 #### Cursor
 
-Add manually via **Settings > Rules > Add Rule > Remote Rule (Github)** with `tiun-app/skills`.
+Install as a [plugin](https://cursor.com/docs/plugins) from this repository. The manifest at [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json) registers the skill and the tiun MCP.
+
+Alternatively, add the skill as a rule via **Settings > Rules > Add Rule > Remote Rule (Github)** with `tiun-app/skills`.
 
 #### Clone
 
@@ -76,7 +78,7 @@ Install the tiun MCP server so agents can fetch your providers and products dire
 ### Per client
 
 - **Claude Code:** the plugin marketplace install (`/plugin install tiun-sdk@tiun-sdk`) auto-wires the MCP via this repo's [`.mcp.json`](.mcp.json). To add manually: `claude mcp add tiun https://mcp.tiun.business --transport http` (verify the exact flag in your Claude Code version).
-- **Cursor:** Settings → MCP → Add new MCP server → paste the JSON block above. Or merge it into `~/.cursor/mcp.json`.
+- **Cursor:** the plugin install registers the MCP from this repo's [`.mcp.json`](.mcp.json) (the manifest's `mcpServers` field). To add it manually: Settings → MCP → Add new MCP server → paste the JSON block above, or merge it into `~/.cursor/mcp.json`.
 - **OpenAI Codex / Gemini CLI / others:** paste the universal config above into the client's MCP config file. See the client's MCP documentation for the exact path.
 
 On first call, agents will prompt for authentication against `my.tiun.business`.
