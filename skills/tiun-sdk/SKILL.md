@@ -126,6 +126,7 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 - User says "videos behind a paywall", "premium content" (ambiguous) → **ask** which mode. Don't guess.
 - User says "how do I get my agent to integrate tiun?" / "set this up with an AI coding agent" → point at the upstream Agent integration guide on [docs.tiun.io](https://docs.tiun.io) and the quickstart in `references/mcp.md` (`npx skills add https://mcp.tiun.business`; add `-y` when you run it).
 - User asks "how do I list products?" / "get all products?" → products are configured in the dashboard at `my.tiun.business`; there is no runtime product-list API. (The MCP exposes inventory to the agent for setup; this is not a runtime SDK feature.)
+- User says "price includes VAT", "tax on top", or "prices excluding tax" → tax behavior on a subscription or one-time product. See [references/mcp.md](references/mcp.md#tax-behavior).
 - User mentions "verify on the backend", "protect API", "trust the client" → server verification (`X-TIUN-API-KEY` header; per-environment base URLs).
 - User mentions sandbox / `localhost` / "why won't it work locally" → confirm `sandbox: true` + sandbox snippet ID + `p-test-...` product IDs (live is hard-blocked on `localhost`).
 - User asks to restyle the overlay, relabel its fields, or add help text / a note / a tooltip inside checkout or login → not supported. The overlay's internals are off limits (Rule 5); put the copy on their own page next to the trigger, and route branding requests to support@tiun.io.
