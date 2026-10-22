@@ -142,6 +142,7 @@ export const TIUN_PRODUCTS = {
 | `returnUrl` | `string` | — | **Required.** Scheme must match native registration and the dashboard App scheme. |
 | `host` | `string` | `https://api.tiun.live` | Environment origin, no trailing slash. `https://api-sandbox.tiun.live` for sandbox. |
 | `language` | `string` | `'en'` | `'en' \| 'de' \| 'fr'` only. |
+| `appearance` | `'light' \| 'dark' \| 'auto'` | `'light'` | Snippet color theme. `'auto'` follows the OS setting. Changing it re-themes the open snippet live. |
 | `debug` | `boolean` | `false` | Logs native bridge traffic, prefixed `[tiun]`. Turn off for release. |
 
 Wrap the app root. The one placement rule: the provider sits **above every component that uses the hooks** (they throw otherwise). The overlay sizes itself to the window, and the provider takes no space until login or checkout opens.

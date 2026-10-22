@@ -64,14 +64,16 @@ Checkout, login, and the time-based connect overlay are rendered by tiun inside 
 
 This is a hard line, not a preference. The overlay's internal structure is unversioned and changes without notice, so an injection that works today breaks silently on the next snippet release — and it breaks *inside a live payment flow*, where the failure mode is a customer who cannot pay.
 
-**The supported surfaces are:**
+**The supported surfaces are** `init()` config (`language`, `tone`, `appearance`), `tiun.setAppearance()`, and dashboard settings:
 
 | Want to change | Where |
 |---|---|
 | Overlay language | `tiun.init({ language })` — `'en' \| 'de' \| 'fr'` |
 | Copy style (formal / informal) | `tiun.init({ tone })` |
+| Color theme | `appearance: 'light' \| 'dark' \| 'auto'` (default `'light'`) on `tiun.init` (web `@tiun/sdk` 0.10.0) or React Native `TiunProvider` (`@tiun/react-native-sdk` 0.3.0). On the web SDK, `tiun.setAppearance(appearance)` switches the theme without a reload and is safe before ready. |
 | Product names, prices, intervals, fees | tiun dashboard (`my.tiun.business`) |
-| Anything else — branding, colors, custom fields, extra copy inside the overlay | Not client-side. Ask support@tiun.io whether the dashboard exposes it. |
+| Colors | Colors are set in the dashboard at the moment. |
+| Anything else — branding, custom fields, extra copy inside the overlay | Dashboard settings. Ask support@tiun.io whether the dashboard exposes it. |
 
 **If a customer wants extra explanation around payment**, it belongs on their own page, next to the button that opens the overlay — before it opens. That surface is fully theirs and never breaks.
 
