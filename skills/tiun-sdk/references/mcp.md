@@ -150,6 +150,8 @@ Needs Node installed; it opens a browser window to authenticate on first connect
 
 The user is prompted to authenticate against `my.tiun.business` if they haven't already. Subsequent calls reuse the session.
 
+When the user connects and authorizes the tiun MCP, they choose which providers the connection can access. Reading the account uses the Viewer role. Creating and editing products uses the Admin role. If the provider they want is missing from `get_providers`, or a call says that provider was not selected, tell them to reconnect the tiun MCP and select it: "Please reconnect the tiun MCP and select the <name> provider so I can access it."
+
 ## What to do if MCP is absent and the user declines to install
 
 Proceed in **manual mode**: ask the user directly for `snippetId`, `productId`(s), and sandbox/live. See [discovery.md](discovery.md) for the manual-mode question scripts.
