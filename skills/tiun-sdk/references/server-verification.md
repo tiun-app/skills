@@ -35,7 +35,7 @@ JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. 
 3. On the backend, exchange the token with the tiun **UserVerification** endpoint:
 
    ```
-   POST {BASE_URL}/live_api/s2s/v1/users/verification
+   POST {BASE_URL}/live_api/s2s/v2/users/verification
    X-TIUN-API-KEY: <your API key from the dashboard>
    Content-Type: application/json
 
@@ -54,7 +54,7 @@ JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. 
    ```json
    {
      "isAuthenticated": true,
-     "userInfo": {
+     "user": {
        "userId": "u-...",
        "email": "user@example.com",
        "productAccess": ["p-live-pro"]
@@ -62,15 +62,15 @@ JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. 
    }
    ```
 
-4. Authorize the request based on `isAuthenticated` and `userInfo.productAccess`, not on anything else the client sent. A `200` with `isAuthenticated: false` means the API key was accepted but the underlying user session is no longer active — treat as unauthenticated.
+4. Authorize the request based on `isAuthenticated` and `user.productAccess`, not on anything else the client sent. A `200` with `isAuthenticated: false` means the API key was accepted but the underlying user session is no longer active — treat as unauthenticated.
 
 ### Multiple plans
 
 If you offer tiers, check from the highest applicable tier down:
 
 ```javascript
-const hasPro   = user.userInfo?.productAccess?.includes('p-live-pro');
-const hasLight = user.userInfo?.productAccess?.includes('p-live-light');
+const hasPro   = user.user?.productAccess?.includes('p-live-pro');
+const hasLight = user.user?.productAccess?.includes('p-live-light');
 
 if (hasPro) {
   // serve full Pro content
