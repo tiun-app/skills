@@ -22,11 +22,13 @@ The `event` field tells you what triggered the fire:
 | `'login'`    | User completed `tiun.login()`. |
 | `'checkout'` | User completed `tiun.checkout()`. |
 | `'logout'`   | User called `tiun.logout()`. |
-| `'update'`   | Entitlements changed mid-session (renewal, cancellation, tier change). **Subscriptions only** — a one-time entitlement is permanent and is never removed by `'update'`. |
+| `'update'`   | The user's ID or email changed. |
 
-Most integrations do not need to branch on `event` — `isAuthenticated` + `user.productAccess` are enough for UI gating. Branch on `event` when you need to fire one-off side effects (e.g. show a "Welcome!" toast on `'login'` but not on `'init'`).
+Most integrations do not need to branch on `event` — `isAuthenticated` + `user.productAccess` are enough for UI gating of subscriptions and non-repeatable one-time products. Branch on `event` when you need to fire one-off side effects (e.g. show a "Welcome!" toast on `'login'` but not on `'init'`).
 
-The SDK does not compute `event`; it passes through the value the hosted snippet sends, defaulting to `'update'` when none is sent. The documented value after a completed checkout is `'checkout'`. Don't depend on whether a `'login'` fire also accompanies a checkout — put post-purchase side effects on `'checkout'`, and drive gating from `isAuthenticated` + `productAccess`.
+When a subscription ends, or a one-time product with **limited access** reaches its end date, that product ID leaves `productAccess` and `userChange` fires. Gate on the array. The events reference does not name an `event` value for that removal. Repeatable products are not gated with `productAccess` — see [one-time.md](one-time.md).
+
+The documented value after a completed checkout is `'checkout'`. Put post-purchase side effects on `'checkout'`. Drive gating from `isAuthenticated` and `productAccess`. `event: 'update'` means the user's ID or email changed — it is not the signal that a subscription or a limited-access purchase ended.
 
 ## Initial state arrives via the listener
 

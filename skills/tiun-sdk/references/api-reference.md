@@ -21,7 +21,7 @@ All methods are on the `tiun` singleton imported from `@tiun/sdk`.
 |---|---|
 | `tiun.login()` | Opens the hosted login overlay. |
 | `tiun.logout()` | Clears the session and fires `logout` / `userChange`. |
-| `tiun.checkout({ productId })` | Opens the hosted checkout overlay for a subscription or one-time product. |
+| `tiun.checkout({ productId, referenceId })` | Opens the hosted checkout overlay for a subscription or one-time product. `referenceId` is required for a repeatable one-time product and omitted otherwise. Needs `@tiun/sdk` 0.11.0 or later when passed. See [one-time.md](one-time.md). |
 | `tiun.start()` | Opens the time-based connect overlay (no product required). See [time-based.md](time-based.md). |
 | `tiun.setContent({ type, contentId, mediaType })` | Updates the current content context. Used by time-based billing to meter sessions per route. See [time-based.md](time-based.md). |
 | `tiun.getUser()` | Returns `{ isAuthenticated, user }`. `user` is `null` when nobody is signed in. |
@@ -51,11 +51,11 @@ Use properties for one-off reads. For UI that needs to stay in sync, listen to `
 
 ```typescript
 interface TiunUser {
-  userId: string;          // stable identifier for the user in tiun
-  email: string;           // email on the account
-  productAccess: string[]; // product IDs the user currently has access to
-  // plus any custom fields configured in the dashboard
+  userId: string;             // stable identifier for the user in tiun
+  email: string;              // email on the account
+  hasNewsletterOptIn: boolean; // whether the user opted in to your newsletter; @tiun/sdk 0.11.0+
+  productAccess: string[];    // product IDs the user currently has access to
 }
 ```
 
-Use `user.productAccess.includes(productId)` to gate features per product — a subscription tier or a one-time purchase. The prefix tells you the **environment**, not the product type: `p-live-...` for live, `p-test-...` for sandbox.
+Use `user.productAccess.includes(productId)` to gate a subscription tier or a non-repeatable one-time purchase (including limited access, whose ID leaves the array at the end date). A repeatable one-time product is checked per `referenceId` on the server — see [one-time.md](one-time.md). The prefix tells you the **environment**, not the product type: `p-live-...` for live, `p-test-...` for sandbox.

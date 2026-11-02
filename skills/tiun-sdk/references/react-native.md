@@ -7,7 +7,7 @@ Upstream guide: "Monetize in React Native" on [docs.tiun.io](https://docs.tiun.i
 ## What it covers
 
 - **Authentication** — `login()` / `logout()`, session restored at launch.
-- **Checkout** — **subscriptions and one-time purchases** via `checkout({ productId })`.
+- **Checkout** — **subscriptions and one-time purchases** via `checkout({ productId })`. A repeatable one-time product also takes `referenceId` (`@tiun/react-native-sdk` 0.4.0 or later). See [one-time.md](one-time.md).
 - **Not time-based.** There is no `start()`, `paywallShow`, or `paywallHide` in React Native. If the user wants time-based billing in a React Native app, say so plainly and point them at support@tiun.io — do not improvise a WebView workaround.
 
 The SDK renders the tiun snippet inside a `WebView`, bridges login and checkout to native, and binds the user's session to a hardware-backed device key (Secure Enclave / Android Keystore). The session survives restarts without the app storing anything.
@@ -34,6 +34,8 @@ When either is reported, compare the three places character for character before
 Before writing config, **ask for the app's existing URL scheme** (check `Info.plist` / `AndroidManifest.xml` first — many apps already register one). Do not invent a scheme; reuse the app's own and remind the user to enter it in the dashboard. The dashboard holds **one** app scheme per environment; additional schemes are managed by tiun via support@tiun.io.
 
 ## Install
+
+`referenceId` on checkout and `hasNewsletterOptIn` on the user need `@tiun/react-native-sdk` **0.4.0** or later. `appearance` needs **0.3.0** or later.
 
 ```bash
 npm install @tiun/react-native-sdk react-native-webview \
@@ -178,7 +180,7 @@ Switch `host`, snippet ID, and product IDs **together** — IDs never cross envi
 | State | Type | Notes |
 |---|---|---|
 | `isAuthenticated` | `boolean` | |
-| `user` | `TiunUser \| null` | `{ userId, email, productAccess: string[] }` |
+| `user` | `TiunUser \| null` | `{ userId, email, hasNewsletterOptIn, productAccess: string[] }` — `hasNewsletterOptIn` needs 0.4.0 or later |
 | `ready` | `boolean` | Snippet initialized. |
 | `cryptoOk` | `boolean \| null` | `false` ⇒ authentication cannot work on this device. |
 
@@ -186,7 +188,7 @@ Switch `host`, snippet ID, and product IDs **together** — IDs never cross envi
 |---|---|
 | `login()` | `void` |
 | `logout()` | `void` — clears session and device credentials |
-| `checkout({ productId })` | `void` |
+| `checkout({ productId, referenceId })` | `void` — `referenceId` is required for a repeatable one-time product and omitted otherwise (0.4.0 or later) |
 | `getUserVerificationToken()` | `Promise<string \| null>` — 5-minute JWT; `null` if signed out or no answer within 5s |
 
 `login`, `logout`, and `checkout` are **queued until ready** — wire them straight to buttons. Do not wrap them in `ready` guards; use `ready` only for a loading state.
@@ -225,7 +227,7 @@ export function useTier(): Tier {
 }
 ```
 
-The web skill's mode rules still hold: purchases open `checkout({ productId })`, account entry opens `login()` (Rule 19); one-time product IDs are permanent in `productAccess` (Rule 13); never infer mode from inventory (Rule 12). The hosted overlay is a black box here too (Rule 5) — don't inject into or restyle the WebView content.
+The web skill's mode rules still hold: purchases open `checkout({ productId })` (plus `referenceId` when the product is repeatable), account entry opens `login()` (Rule 19); one-time access follows Rule 13; never infer mode from inventory (Rule 12). The hosted overlay is a black box here too (Rule 5) — don't inject into or restyle the WebView content. `userChange` still has no `event` field, including when a limited-access purchase ends: re-read `user.productAccess`.
 
 ## Server verification
 

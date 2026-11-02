@@ -10,6 +10,8 @@ pnpm add @tiun/sdk
 yarn add @tiun/sdk
 ```
 
+`referenceId` on `tiun.checkout` and `hasNewsletterOptIn` on the user object need `@tiun/sdk` **0.11.0** or later. `appearance` needs **0.10.0** or later.
+
 For vanilla HTML/JS without a bundler, import the ESM build from a CDN:
 
 ```html
@@ -63,7 +65,7 @@ Pick one. Mixing both leads to a double-loaded snippet and conflicting config.
 
 ## Environments — live vs sandbox
 
-tiun runs **two fully independent parallel environments**: live (real customers and payments) and sandbox (simulated payments, separate catalog). Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, customers, and analytics. Nothing syncs between them.
+tiun runs **two fully independent parallel environments**: live (real customers and payments) and sandbox (simulated payments, separate catalog). Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, webhook endpoints, customers, and analytics. Nothing syncs between them.
 
 ```javascript
 // Sandbox

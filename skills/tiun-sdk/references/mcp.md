@@ -14,7 +14,7 @@ The exact call signatures live in the MCP itself; read them there rather than as
 
 **Writes land in a real account, and the account is the user's, not yours.**
 
-- Confirm the exact change with the user — name, price, interval, tax category, environment — and get an explicit yes before writing. Every time, not once per session.
+- Confirm the exact change with the user — name, price, interval, tax category, environment — and get an explicit yes before writing. Every time, not once per session. For a one-time product there is no interval; also confirm whether **Repeat purchases** and **Limited access** should be on (see below).
 - Default to sandbox. Writing to live is a deliberate choice the user makes out loud.
 - Never invent a price, name or interval. Take them from the user or from explicit values already in the project, and ask when you have neither.
 - Pricing type is fixed at creation. Nothing converts a one-time product into a subscription or back — an edit aimed at the wrong type is refused, not converted.
@@ -43,7 +43,7 @@ Each product the MCP reports carries a **`pricingType`** — the only reliable s
 | `'OneTime'` | One-time purchase | `tiun.checkout({ productId })` |
 | `'TimeBased'` | Time-based | `tiun.start()` |
 
-**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: a subscription grants a renewable entitlement that can lapse, a one-time purchase grants a permanent one that can never be re-bought. See [one-time.md](one-time.md).
+**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: a subscription grants a renewable entitlement that can lapse. A one-time purchase is permanent and bought once per customer **by default**. **Limited access** adds an end date, and **Repeat purchases** allows another purchase per `referenceId`. `pricingType: 'OneTime'` does not tell you whether either switch is on. Read those fields when the product payload includes them; otherwise ask. See [one-time.md](one-time.md).
 
 A product's price arrives in the block matching its pricing type, and each type has its own shape — the MCP documents them, so read the response rather than assuming a field. What matters when you report a price back to the user is that the three are not interchangeable: a one-time fee is charged once, a subscription price recurs on its interval, and a time-based fee is metered usage against a monthly cap. Never present a time-based fee as a subscription price.
 
@@ -54,7 +54,7 @@ The exact call signature is the MCP's to define, but the fields come from the da
 | Type | Fields |
 |---|---|
 | **Subscription** | Name (shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
-| **One-time** | Name and price. No interval, no trial — neither exists for this type |
+| **One-time** | Name and price. No interval, no trial. Optional switches, set in the dashboard under **Products**: **Repeat purchases** (buy again, once per `referenceId`; the price is charged each time) and **Limited access** (access ends a count of days, weeks, months, or years after the day of purchase; nothing renews). The two combine. |
 | **Time-based** | Name, interval **1 minute only**, interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
 
 Two that are easy to get wrong:
@@ -63,6 +63,8 @@ Two that are easy to get wrong:
 - **Time-based intervals are 1 minute only.**
 
 Plus the tax category — required, no default, permanent (above).
+
+**Repeat purchases and Limited access are dashboard switches** on a one-time product. The published description of what the MCP can write — create and edit one-time and subscription products, confirming name, price, interval, tax category, and environment — does not list those two switches as parameters. Do not invent arguments for them. If the connected tool's schema lists them, pass only what that schema documents and include them in the confirmation. If it does not, set them in the dashboard (**Products**), or create the product there.
 
 ## Tax behavior
 

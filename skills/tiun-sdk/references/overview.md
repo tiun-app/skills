@@ -8,7 +8,7 @@ Upstream documentation: [docs.tiun.io](https://docs.tiun.io) (LLM-friendly bundl
 
 - **Authentication.** Email + one-time passcode (OTP). Returning subscribers can receive OTPs via SMS to a registered phone number. No passwords.
 - **Subscription billing.** Recurring charges on a repeating interval, set as a count plus a unit — daily, weekly, monthly, or yearly, or any multiple of those ("every 3 months"). Optionally preceded by a trial. Suited for SaaS and memberships.
-- **One-time purchases.** A single fixed fee granting permanent access — a perpetual licence, bought once per customer and never re-bought. Suited for lifetime access, permanent feature unlocks, and owning a course or piece of content outright. Not a consumable: tiun does not model buying the same thing repeatedly.
+- **One-time purchases.** A single fixed fee, with no interval, trial, renewal, or cancellation. Access is permanent by default, and each customer buys the product once — lifetime access, a course, a report. **Limited access** ends that access after a set time. **Repeat purchases** charges the price again, once per `referenceId` (articles, bookings, tickets). See [one-time.md](one-time.md).
 - **Time-based billing.** Per-session, anonymous metering — users pay for time spent with paid content (e.g. EUR 0.22 per minute) up to a configured monthly cap.
 - **Access control / entitlements.** Delivered to the frontend and verifiable on the server.
 - **Hosted UI overlays.** Checkout and login overlays are rendered by tiun, inside shadow DOM. The integrator calls SDK methods to open them and does not modify what is inside — see [Hosted UI is a black box](#hosted-ui-is-a-black-box).
@@ -35,7 +35,7 @@ Swift, Kotlin, and Flutter SDKs remain on the upstream roadmap. If the user want
 
 ## Environments — live and sandbox
 
-tiun runs **two fully independent parallel environments**. Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, customers, sessions, and analytics. Nothing syncs between them.
+tiun runs **two fully independent parallel environments**. Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, webhook endpoints, customers, sessions, and analytics. Nothing syncs between them.
 
 - **Live** — real customers, real payments, your live domain and/or app scheme (Settings → Environment setup). `localhost` is blocked.
 - **Sandbox** — simulated payments, test customers, `localhost` enabled by default on any port.
@@ -45,7 +45,7 @@ You select an environment by setting (or omitting) `sandbox: true` in `tiun.init
 ## The three modes
 
 - **Subscriptions** — persistent user accounts (email + OTP). `user.productAccess[]` lists active subscriptions. Entry point: `tiun.checkout({ productId })`. See [subscriptions.md](subscriptions.md).
-- **One-time purchases** — same accounts and same entry point as subscriptions, charged once as a fixed fee. The product ID enters `user.productAccess[]` and stays there permanently. See [one-time.md](one-time.md).
+- **One-time purchases** — same accounts and same entry point as subscriptions, charged as a fixed fee. By default the product ID enters `user.productAccess[]` and stays there. Limited access removes it at the end date. Repeat purchases are checked per `referenceId` on the server. See [one-time.md](one-time.md).
 - **Time-based** — anonymous per-session billing, no account required. Entry point: `tiun.start()` + `paywallShow` / `paywallHide` events. See [time-based.md](time-based.md).
 
 A single tiun account can offer any combination at once. `user.productAccess[]` mixes subscription and one-time entitlements freely — the array itself does not distinguish them, so gate on the specific product ID you care about.
@@ -83,7 +83,7 @@ This is a hard line, not a preference. The overlay's internal structure is unver
 2. **Wait for ready** before relying on snippet state (`tiun.waitForReady()` or the `ready` event). Methods like `checkout` / `login` / `start` queue internally.
 3. **Subscribe to events** (`userChange`, `paywallShow` / `paywallHide`, `login`, `logout`, `error`) to drive UI state.
 4. **Open hosted overlays** (`checkout`, `login`, `start`); do not build your own payment UI, and do not modify tiun's — see [Hosted UI is a black box](#hosted-ui-is-a-black-box).
-5. **Verify on the server** when access must be trusted — see [server-verification.md](server-verification.md).
+5. **Verify on the server** when access must be trusted — see [server-verification.md](server-verification.md). Webhooks keep your own systems in sync and are not a substitute for that check — see [webhooks.md](webhooks.md).
 
 ## Dashboard
 
