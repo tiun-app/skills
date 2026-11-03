@@ -41,7 +41,7 @@ Leave `referenceId` off checkout unless the product has **Repeat purchases** tur
 |---|---|---|---|---|
 | Charge | Recurring fee + interval | Fixed fee, once | Fixed fee, once | Fixed fee, each purchase |
 | Trial | Optional | None | None | None |
-| After payment | Renews until it ends | Stays in `productAccess` | Leaves `productAccess` at the end date | Checked per `referenceId` on the server |
+| After payment | Renews until it ends | Stays in `productAccess` | Leaves `productAccess` at the end date | Checked per `referenceId` with `checkProductAccess()` or on the server |
 | Cancel | Yes | No | No | No |
 | Buy again | After it ends | Never | Never | Once per `referenceId` |
 | Tiers | Yes | No | No | No |
@@ -88,17 +88,40 @@ Requires `@tiun/sdk` **0.11.0** or later. React Native: `checkout({ productId, r
 
 The once-per-customer rule applies **per reference ID**. A new reference ID charges again. The same reference ID shows the "already purchased" screen and charges nothing.
 
-`productAccess` is a list of product IDs. It does not say which reference ID was bought, so do not gate a repeatable product with `productAccess.includes(productId)`.
+`productAccess` is a list of product IDs. It does not say which reference ID was bought, so do not gate a repeatable product with `productAccess.includes(productId)`. Check the product **and** the reference ID together, in one of two places:
 
-Check on the server, after verifying the user:
+- **In the browser** with `tiun.checkProductAccess(productId, { referenceId })` (`@tiun/sdk` **0.12.0+**, React Native `checkProductAccess` on `useTiun()` **0.5.0+**). No backend needed.
+- **On the server**, a good fit when the integrator already has a backend or wants a more secure setup where the content stays on the server until the purchase is confirmed.
+
+You can combine them: the browser check for the page, the server check for the content it loads.
+
+### In the browser
+
+```javascript
+async function loadArticle(articleId) {
+  const { hasAccess } = await tiun.checkProductAccess(TIUN_PRODUCTS.article, {
+    referenceId: articleId,
+  });
+  hasAccess ? showArticle(articleId) : showSalesPage(articleId);
+}
+
+// Re-check on every userChange: page load, login, logout, and any access change
+tiun.on('userChange', () => loadArticle(currentArticleId));
+```
+
+Signed out, or no purchase for that reference: `{ hasAccess: false, access: null }`, not an error. For a list of items (an article index, "My purchases"), call `tiun.listProductAccess()` once and match each item's `referenceId`, instead of `checkProductAccess()` per item.
+
+`userChange` fires with `event: 'checkout'` when a repeatable product is bought with a new reference ID, even though `productAccess` doesn't change — so re-checking on every `userChange` is enough to pick up the purchase.
+
+### On the server
+
+After verifying the user:
 
 ```
 GET /live_api/s2s/v1/users/{userId}/product_access/{productId}?referenceId={referenceId}
 ```
 
-Details and response shape: [server-verification.md](server-verification.md#repeatable-product-access). The frontend SDK has no reference check yet. Do not add one. Show or hide the buy button from the result of that server check.
-
-`userChange` with `event: 'checkout'` is the cue to reload the item. The handler asks your backend; the backend calls the product-access URL above.
+Details and response shape: [server-verification.md](server-verification.md#repeatable-product-access). The frontend asks your backend on every `userChange`, and the backend calls the product-access URL above.
 
 A repeatable product with **Limited access** still uses that URL. `expiresAt` on the access object is the end of that purchase; it is `null` when limited access is off.
 
@@ -126,13 +149,14 @@ tiun.on('userChange', ({ isAuthenticated, user }) => {
 });
 ```
 
-A repeatable product does not belong in this `productAccess` check. Ask the server about the reference ID.
+A repeatable product does not belong in this `productAccess` check. Check the reference ID with `tiun.checkProductAccess()` or on the server.
 
 ## Common mistakes
 
 - **Gating a repeatable product with `productAccess.includes(productId)`.** That array cannot tell references apart.
 - **Opening checkout for a repeatable product without `referenceId`.** The overlay stops before payment.
-- **Inventing a frontend reference check.** It is not in the SDK yet. Use the server URL above.
+- **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
+- **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
 - **Leaving the buy button up after a confirmed purchase** of that product (default or limited access) or of that reference ID (repeatable). Checkout will not charge again.
 - **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Limited access removes the ID when the period ends; it does not renew.
 - **Quantity selectors, carts, or credit packs.** Repeat purchases are another `referenceId`, not a quantity.

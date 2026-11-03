@@ -51,21 +51,22 @@ Opening checkout doesn't grant or gate anything by itself. Paid functionality st
 
 ## Branching on `userChange.event`
 
-The `event` field tells you what triggered the fire (`'init' | 'login' | 'checkout' | 'logout' | 'update'`). Most gating logic does not need it — `isAuthenticated` + `productAccess` are enough. Branch when you want one-off side effects:
+The `event` field tells you what triggered the fire (`'init' | 'login' | 'logout' | 'checkout' | 'update'`). `'checkout'` means the user's access changed — gained **or lost** — and `'update'` means profile details changed. Gating doesn't need it: re-check `productAccess` on every fire. Branch only for one-off side effects, and for a purchase message check that access was gained:
 
 ```javascript
+let previousAccess = [];
+
 tiun.on('userChange', ({ event, isAuthenticated, user }) => {
-  if (!isAuthenticated) return showSignedOutUI(); // whatever your app shows signed-out visitors
+  const access = user?.productAccess ?? [];
 
   if (event === 'checkout') {
-    showWelcomeToast(`Subscribed to ${user.productAccess.join(', ')}`);
+    const gained = access.filter((id) => !previousAccess.includes(id));
+    if (gained.length) showWelcomeToast(`Subscribed to ${gained.join(', ')}`);
   }
   // event === 'init' on returning visitors — no toast
-  // event === 'update' when the user's ID or email changed.
-  // A subscription ending, or a limited-access one-time purchase reaching its
-  // end date, removes that product ID from productAccess and fires userChange.
-  // Gate on the array. See events.md and one-time.md.
+  previousAccess = access;
 
+  if (!isAuthenticated) return showSignedOutUI(); // whatever your app shows signed-out visitors
   renderGatedUI(user);
 });
 ```
@@ -107,8 +108,9 @@ document.querySelector('#buy-pro').onclick =
 
 ## Gating rules
 
-- **UI-level gating**: `user.productAccess.includes(productId)` is sufficient for showing/hiding UI.
-- **Trusted access (paid API, protected downloads, etc.)**: do server-side verification (see [server-verification.md](server-verification.md)). Never trust `productAccess` alone for anything a user could bypass by editing their own client.
+- **In the app**: `user.productAccess.includes(productId)`, re-checked on every `userChange`, is all a subscription needs. It works without a backend.
+- **Dates on an account page** ("Renews" vs "Ends on"): `tiun.listProductAccess()` or `tiun.checkProductAccess(productId)` (`@tiun/sdk` 0.12.0+). `expiresAt` is `null` while the subscription renews and the end of the paid period once it's cancelled.
+- **On the server**: when the integrator's backend serves the paid content (a paid API, protected downloads), verify there before returning it — the more secure setup. See [server-verification.md](server-verification.md).
 
 ## Common mistakes
 

@@ -38,7 +38,7 @@ tiun.init({
 });
 ```
 
-`tiun.init()` is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
+Call `tiun.init()` **once**, ideally in the app root. It is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
 
 The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 15 in `SKILL.md`).
 
@@ -112,8 +112,10 @@ The `snippetId` is not a secret — it identifies an environment, not a user —
 
 - `tiun.init(config)`: call on app start. Idempotent.
 - `tiun.waitForReady()`: returns a Promise that resolves when the hosted snippet is loaded.
-- `tiun.destroy()`: tear down the instance. Only needed where the subtree can remount — see the lifecycle matrix in [frameworks.md](frameworks.md).
-- `tiun.isInitialized` / `tiun.isReady`: boolean status flags.
+- `tiun.destroy()`: tear down the instance. Only needed where the subtree can remount — see the lifecycle matrix in [frameworks.md](frameworks.md). `init()` again after `destroy()` works from `@tiun/sdk` 0.12.0.
+- `tiun.isInitialized` / `tiun.isReady`: boolean status flags. From 0.12.0, `isReady` stays `true` after `destroy()`.
+
+**Never assign the SDK to `window.tiun`.** The snippet script uses that name and replaces it when it loads. Keep the imported `tiun`, or use your own global name such as `window.tiunSdk = tiun`.
 
 ## Where to call `init`
 

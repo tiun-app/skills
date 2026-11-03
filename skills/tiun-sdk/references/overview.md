@@ -45,7 +45,7 @@ You select an environment by setting (or omitting) `sandbox: true` in `tiun.init
 ## The three modes
 
 - **Subscriptions** — persistent user accounts (email + OTP). `user.productAccess[]` lists active subscriptions. Entry point: `tiun.checkout({ productId })`. See [subscriptions.md](subscriptions.md).
-- **One-time purchases** — same accounts and same entry point as subscriptions, charged as a fixed fee. By default the product ID enters `user.productAccess[]` and stays there. Limited access removes it at the end date. Repeat purchases are checked per `referenceId` on the server. See [one-time.md](one-time.md).
+- **One-time purchases** — same accounts and same entry point as subscriptions, charged as a fixed fee. By default the product ID enters `user.productAccess[]` and stays there. Limited access removes it at the end date. Repeat purchases are checked per `referenceId`, in the browser with `tiun.checkProductAccess()` (0.12.0+) or on the server. See [one-time.md](one-time.md).
 - **Time-based** — anonymous per-session billing, no account required. Entry point: `tiun.start()` + `paywallShow` / `paywallHide` events. See [time-based.md](time-based.md).
 
 A single tiun account can offer any combination at once. `user.productAccess[]` mixes subscription and one-time entitlements freely — the array itself does not distinguish them, so gate on the specific product ID you care about.
@@ -89,14 +89,19 @@ This is a hard line, not a preference. The overlay's internal structure is unver
 
 Product configuration, analytics, snippet IDs, and API keys live at `my.tiun.business`. The dashboard has a Sandbox toggle in the sidebar that switches which environment you're viewing/editing; the first click enables sandbox (no setup required). Where tiun may run — the live domain and/or app scheme — is configured per environment in **Settings → Environment setup**.
 
-## Products are configured in the dashboard. There is no runtime product-list API.
+## Products are configured in the dashboard and read at runtime
 
-Products (subscription, one-time, and time-based alike) are **created and managed in the tiun dashboard**. Each product has a stable `productId` string (`p-live-...` for live, `p-test-...` for sandbox) that the integrator hardcodes into calls like `tiun.checkout({ productId: 'p-live-pro' })`.
+Products (subscription, one-time, and time-based alike) are **created and managed in the tiun dashboard**. Each product has a stable `productId` string (`p-live-...` for live, `p-test-...` for sandbox) that the integrator passes to calls like `tiun.checkout({ productId: 'p-live-pro' })`.
 
-The SDK does **not** expose a method to list or fetch products at runtime. If an agent is asked "how do I get a product list?":
+From `@tiun/sdk` 0.12.0 (`@tiun/react-native-sdk` 0.5.0), the SDK can read the catalog and the user's access at runtime:
 
-- Tell the user to manage products in the tiun dashboard, then hardcode the relevant `productId`s in the pricing page.
-- If a dynamic catalog is needed (e.g. an admin-managed list), the user must maintain it in their own backend or CMS and pass the selected `productId` to the SDK.
-- **Do not invent** methods like `tiun.getProducts()`, `tiun.listProducts()`, or a `https://api.tiun.io/products` REST endpoint. None of these exist.
+- `tiun.listProducts()` — the products on this snippet (`productId`, `name`, `type`). Works signed out.
+- `tiun.getProduct(productId)` — one product with a localized `pricingLine` (e.g. `"CHF 240 /year"`), so a pricing page doesn't hardcode prices.
+- `tiun.listProductAccess()` / `tiun.checkProductAccess(productId, { referenceId })` — what the current user has access to, with `referenceId`, `activatedAt`, and `expiresAt`.
 
-The tiun MCP server *does* expose providers and products to the agent during setup (see [mcp.md](mcp.md)), but that is an integration-time read of the dashboard, not a runtime SDK feature.
+Backends can read the same data with the server-to-server Product and Product Access APIs. See [api-reference.md](api-reference.md#products).
+
+- The SDK cannot create or edit products. That happens in the dashboard (or through the MCP during setup).
+- **Do not invent** other method names, such as `tiun.getProducts()`, or REST endpoints that aren't in the docs.
+
+The tiun MCP server also exposes providers and products to the agent during setup (see [mcp.md](mcp.md)). That's an integration-time read of the dashboard, separate from the SDK methods above.

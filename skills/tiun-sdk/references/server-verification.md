@@ -1,6 +1,6 @@
 # Server-Side Verification
 
-Trust nothing the client sends about its own entitlements. When access must be trusted (paid API endpoints, protected downloads, premium content payloads), verify on the server.
+When the integrator's backend serves paid content (paid API endpoints, protected downloads, premium content payloads), verify on the server before returning it. It's the more secure setup: the content stays on the server until access is confirmed, and the server only trusts what tiun's API tells it. Apps without a backend can check access in the browser instead — see [api-reference.md](api-reference.md#products).
 
 There are three server-side flows:
 
@@ -21,7 +21,7 @@ API keys are environment-specific — sandbox keys do not work against live and 
 
 ## User verification (auth + `productAccess` entitlements)
 
-JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. Do not cache verification results past the token's lifetime; the frontend can fetch a fresh token whenever you need one.
+JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. **Fetch a fresh token for every request** to your backend — don't cache, store, or share one between requests. Requests that run in parallel can each fetch their own (each call gets a token from `@tiun/sdk` 0.12.0; before, all but the last returned `null`). A `null` token means there's none to send: the user isn't signed in, or the request failed — `tiun.isAuthenticated` tells you which. Don't cache verification results past the token's lifetime either.
 
 ### Flow
 
@@ -171,7 +171,7 @@ X-TIUN-API-KEY: <your API key from the dashboard>
 
 `200` body: `{ "data": [ /* the same access objects */ ] }`.
 
-The frontend SDK cannot check a reference ID. Do not invent a client method for it.
+The frontend can check the same thing without a backend with `tiun.checkProductAccess(productId, { referenceId })` (`@tiun/sdk` 0.12.0+), and list it with `tiun.listProductAccess()`. Same access object shape. See [one-time.md](one-time.md#repeat-purchases).
 
 ## Session verification (time-based)
 

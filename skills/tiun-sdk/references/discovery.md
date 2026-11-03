@@ -77,13 +77,13 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 ### One-time, MCP present
 
 1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
-2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Ask, or read those fields when the product payload includes them. For a repeatable product, ask which ID in the app is the `referenceId`.
+2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Ask, or read those fields when the product payload includes them. For a repeatable product, ask which ID in the app is the `referenceId`, and whether the project has a backend that serves the content (check on the server) or should check in the browser with `tiun.checkProductAccess()` (`@tiun/sdk` 0.12.0+).
 3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### One-time, no MCP
 
 1. Ask for `snippetId` (from `my.tiun.business`).
-2. For each product: ask the `productId` and a label (e.g. `lifetime = p-live-lifetime`). Ask whether **Repeat purchases** or **Limited access** is on. For a repeatable product, ask which ID in the app is the `referenceId`.
+2. For each product: ask the `productId` and a label (e.g. `lifetime = p-live-lifetime`). Ask whether **Repeat purchases** or **Limited access** is on. For a repeatable product, ask which ID in the app is the `referenceId`, and whether the project has a backend that serves the content (check on the server) or should check in the browser with `tiun.checkProductAccess()` (`@tiun/sdk` 0.12.0+).
 3. Ask which environment (live or sandbox). The product-ID prefix is a strong hint — `p-test-...` ⇒ sandbox, `p-live-...` ⇒ live.
 
 ### Time-based, MCP present
