@@ -21,7 +21,7 @@ The exact call signatures live in the MCP itself; read them there rather than as
 - There is no idempotency key: creating twice creates two products. Check the catalog for an existing match first.
 - Nothing can be deleted, archived or deactivated through the MCP. A write cannot be undone from here.
 
-**A tax category is required on creation, has no default, and can never be changed.** Take it from the account's own list rather than guessing — it determines how the product is taxed. That list is closed: if the product genuinely fits none of the categories, do **not** pick the nearest one. Abandon the create and send the user to `https://my.tiun.business` → new product → "Something else" to submit it. Creating a product under an approximate category is worse than not creating it: the only remedy is archiving it in the dashboard and creating a replacement, and archiving is one-way — there is no restore or re-activate.
+**A tax category is required on creation, has no default, and can never be changed.** Take it from the account's own list rather than guessing — it determines how the product is taxed. That list is closed: if the product genuinely fits none of the categories, do **not** pick the nearest one. Abandon the create and send the user to `https://my.tiun.business` → new product → **Product type** → "Not on the list? Tell us what you sell" to describe it; tiun reviews it and gets back to them. Creating a product under an approximate category is worse than not creating it: the only remedy is archiving it in the dashboard and creating a replacement, and archiving is one-way — there is no restore or re-activate.
 
 ## Detection
 
