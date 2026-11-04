@@ -21,7 +21,7 @@ API keys are environment-specific — sandbox keys do not work against live and 
 
 ## User verification (auth + `productAccess` entitlements)
 
-JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. **Fetch a fresh token for every request** to your backend — don't cache, store, or share one between requests. Requests that run in parallel can each fetch their own (each call gets a token from `@tiun/sdk` 0.12.0; before, all but the last returned `null`). A `null` token means there's none to send: the user isn't signed in, or the request failed — `tiun.isAuthenticated` tells you which. Don't cache verification results past the token's lifetime either.
+JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. **Fetch a fresh token for every request** to your backend. Requests that run in parallel can each fetch their own (each call gets a token from `@tiun/sdk` 0.12.0; before, all but the last returned `null`). A `null` token means there's none to send: the user isn't signed in, or the request failed — `tiun.isAuthenticated` tells you which. Don't cache verification results past the token's lifetime either.
 
 ### Flow
 

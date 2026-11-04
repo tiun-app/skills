@@ -46,7 +46,7 @@ Something assigned the SDK to `window.tiun`. The snippet script uses that name a
 ## Server-side verification fails
 
 - **401**: API key is wrong, or doesn't belong to the environment the token came from. Sandbox keys do not work against live, and vice versa.
-- **JWT expired**: verification tokens are valid for 5 minutes. Fetch a fresh one via `tiun.getUserVerificationToken()` for every request; do not cache tokens or verification results.
+- **JWT expired**: verification tokens are valid for 5 minutes. Fetch a fresh one via `tiun.getUserVerificationToken()` for every request, and don't cache verification results past the token's lifetime.
 - **`null` token on parallel requests**: before `@tiun/sdk` 0.12.0, parallel `getUserVerificationToken()` calls returned `null` for all but the last. Upgrade.
 - **Wrong header name**: it's `X-TIUN-API-KEY`. (Older example code referencing `X-ACCESS-TOKEN` is out of date.)
 - **404 on session verification**: the session has expired, was invalidated, or the user is out of funds — fail closed and deny the request.
