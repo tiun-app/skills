@@ -188,7 +188,7 @@ Switch `host`, snippet ID, and product IDs **together** — IDs never cross envi
 |---|---|
 | `login()` | `void` |
 | `logout()` | `void` — clears session and device credentials |
-| `checkout({ productId, referenceId })` | `void` — `referenceId` is required for a repeatable one-time product and omitted otherwise (0.4.0 or later) |
+| `checkout({ productId, referenceId })` | `void` — `referenceId` is required for a repeatable one-time product and omitted otherwise. Passing it on any other product is a configuration error. 1–200 characters: letters, digits, `-`, `_`, `.`, no spaces (0.4.0 or later). See [one-time.md](one-time.md). |
 | `getUserVerificationToken()` | `Promise<string \| null>` — 5-minute JWT; `null` if signed out or no answer within 5s. Fetch a fresh one per backend request. |
 | `listProducts()` | `Promise<Product[]>` — 0.5.0 or later |
 | `getProduct(productId)` | `Promise<ProductDetail>` — localized `pricingLine`; 0.5.0 or later |

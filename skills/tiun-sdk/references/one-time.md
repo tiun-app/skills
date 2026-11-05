@@ -33,7 +33,7 @@ document.querySelector('#buy').onclick =
 
 `userChange`, the user object, and UI-vs-trusted gating are in [subscriptions.md](subscriptions.md). Read them there.
 
-Leave `referenceId` off checkout unless the product has **Repeat purchases** turned on.
+Leave `referenceId` off checkout unless the product has **Repeat purchases** turned on. Passing it on any other product — a subscription, a time-based product, or a one-time product with the switch off — shows a configuration error and charges nothing.
 
 ## What's different from a subscription
 
@@ -75,7 +75,7 @@ On the server, the same `user.productAccess` check applies. See [server-verifica
 
 Turn on **Repeat purchases** for articles, bookings, tickets, reports, and anything the same customer buys more than once. Each purchase is tied to a `referenceId` your app already has — an article ID, a booking ID, or an order ID. Use the same ID whenever you mean the same thing.
 
-`referenceId` is **required**. Checkout without it shows a configuration error and charges nothing.
+`referenceId` is **required**. Checkout without it shows a configuration error and charges nothing. Use 1–200 characters: letters (`A–Z`, `a–z`), digits, hyphens (`-`), underscores (`_`), or dots (`.`). No spaces. Anything else shows a configuration error and charges nothing.
 
 ```javascript
 tiun.checkout({
@@ -155,6 +155,8 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 
 - **Gating a repeatable product with `productAccess.includes(productId)`.** That array cannot tell references apart.
 - **Opening checkout for a repeatable product without `referenceId`.** The overlay stops before payment.
+- **Passing `referenceId` on a product that is not repeatable.** Checkout stops with a configuration error. Omit it for subscriptions, time-based products, and one-time products with Repeat purchases off.
+- **A `referenceId` outside the allowed characters.** Use 1–200 characters: letters, digits, `-`, `_`, or `.`. No spaces.
 - **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
 - **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
 - **Leaving the buy button up after a confirmed purchase** of that product (default or limited access) or of that reference ID (repeatable). Checkout will not charge again.

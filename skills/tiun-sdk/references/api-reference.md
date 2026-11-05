@@ -21,7 +21,7 @@ All methods are on the `tiun` singleton imported from `@tiun/sdk`.
 |---|---|
 | `tiun.login()` | Opens the hosted login overlay. |
 | `tiun.logout()` | Clears the session and fires `logout` / `userChange`. |
-| `tiun.checkout({ productId, referenceId })` | Opens the hosted checkout overlay for a subscription or one-time product. `referenceId` is required for a repeatable one-time product and omitted otherwise. Needs `@tiun/sdk` 0.11.0 or later when passed. See [one-time.md](one-time.md). |
+| `tiun.checkout({ productId, referenceId })` | Opens the hosted checkout overlay for a subscription or one-time product. `referenceId` is required for a repeatable one-time product. Omit it for every other product; passing it there is a configuration error. 1–200 characters: letters, digits, `-`, `_`, `.`, no spaces. Needs `@tiun/sdk` 0.11.0 or later when passed. See [one-time.md](one-time.md). |
 | `tiun.start()` | Opens the time-based connect overlay (no product required). See [time-based.md](time-based.md). |
 | `tiun.setContent({ type, contentId, mediaType })` | Updates the current content context. Used by time-based billing to meter sessions per route. See [time-based.md](time-based.md). |
 | `tiun.getUser()` | Returns `{ isAuthenticated, user }`. `user` is `null` when nobody is signed in. |
