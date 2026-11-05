@@ -28,7 +28,7 @@ Something assigned the SDK to `window.tiun`. The snippet script uses that name a
 
 ## A repeatable purchase doesn't show up
 
-`productAccess` lists product IDs, not reference IDs, so it doesn't change when a repeatable product is bought with a new reference. Check with `tiun.checkProductAccess(productId, { referenceId })` (0.12.0+) on every `userChange` — it fires with `event: 'checkout'` for that purchase. Pass the same `referenceId` you passed to `checkout()`.
+The product ID shows up in `productAccess` after the first reference and stays until the last one ends, and it never names which reference was bought. A later purchase can leave that array looking the same. `tiun.checkProductAccess(productId, { referenceId })` is the check (0.12.0+), on every `userChange` — it fires with `event: 'checkout'` for that purchase. Pass the same `referenceId` you passed to `checkout()`.
 
 ## Product methods reject
 

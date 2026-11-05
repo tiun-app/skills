@@ -88,7 +88,7 @@ Requires `@tiun/sdk` **0.11.0** or later. React Native: `checkout({ productId, r
 
 The once-per-customer rule applies **per reference ID**. A new reference ID charges again. The same reference ID shows the "already purchased" screen and charges nothing.
 
-`productAccess` is a list of product IDs. It does not say which reference ID was bought, so do not gate a repeatable product with `productAccess.includes(productId)`. Check the product **and** the reference ID together, in one of two places:
+`productAccess` is a list of product IDs. The product ID shows up after the first reference and stays until the last one ends, and it never names which reference was bought, so do not gate a repeatable product with `productAccess.includes(productId)`. Check the product and the reference ID together, in one of two places:
 
 - **In the browser** with `tiun.checkProductAccess(productId, { referenceId })` (`@tiun/sdk` **0.12.0+**, React Native `checkProductAccess` on `useTiun()` **0.5.0+**). No backend needed.
 - **On the server**, a good fit when the integrator already has a backend or wants a more secure setup where the content stays on the server until the purchase is confirmed.
@@ -111,7 +111,7 @@ tiun.on('userChange', () => loadArticle(currentArticleId));
 
 Signed out, or no purchase for that reference: `{ hasAccess: false, access: null }`, not an error. For a list of items (an article index, "My purchases"), call `tiun.listProductAccess()` once and match each item's `referenceId`, instead of `checkProductAccess()` per item.
 
-`userChange` fires with `event: 'checkout'` when a repeatable product is bought with a new reference ID, even though `productAccess` doesn't change — so re-checking on every `userChange` is enough to pick up the purchase.
+`userChange` fires with `event: 'checkout'` when a repeatable product is bought with a new reference ID. A later reference leaves the product ID in place, so re-checking with `tiun.checkProductAccess(productId, { referenceId })` on every `userChange` is what picks up the purchase.
 
 ### On the server
 

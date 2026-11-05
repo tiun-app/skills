@@ -233,7 +233,7 @@ export function useTier(): Tier {
 
 The web skill's mode rules still hold: purchases open `checkout({ productId })` (plus `referenceId` when the product is repeatable), account entry opens `login()` (Rule 19); one-time access follows Rule 13; never infer mode from inventory (Rule 12). The hosted overlay is a black box here too (Rule 5) — don't inject into or restyle the WebView content. When a subscription or a limited-access purchase ends, `userChange` fires with `event: 'checkout'` (0.5.0+): re-read `user.productAccess`.
 
-A **repeatable** product isn't in `productAccess` per reference. Check it with `checkProductAccess(productId, { referenceId })` on mount and on every `userChange`:
+For a repeatable product, the product ID shows up in `productAccess` after the first reference and stays until the last one ends, and it never names which reference was bought. `checkProductAccess(productId, { referenceId })` is the check, on mount and on every `userChange`:
 
 ```tsx
 const { checkProductAccess } = useTiun();
