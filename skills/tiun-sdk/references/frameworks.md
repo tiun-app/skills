@@ -4,9 +4,9 @@
 
 Three primitives. Adapt the reactive primitive to your stack.
 
-1. **Init once**, on the client, after the document is ready.
+1. **Init once**, on the client, after the document is ready — ideally in the app root.
 2. **Bind events** — `userChange` for checkout-based products (subscriptions and one-time purchases), `paywallShow` / `paywallHide` for time-based — register the listener before/synchronously after `init` so the initial fire isn't missed.
-3. **Teardown** — call the returned `off()` and `tiun.destroy()` **only if the subtree can remount**. See the lifecycle matrix below.
+3. **Teardown** — call the returned `off()` and `tiun.destroy()` **only if the subtree can remount**. Re-initializing after `destroy()` needs `@tiun/sdk` **0.12.0+**. See the lifecycle matrix below.
 
 ```javascript
 import { tiun } from '@tiun/sdk';
@@ -43,6 +43,8 @@ Initialize at the end of `<body>` or after `DOMContentLoaded`. Page reload tears
     () => tiun.checkout({ productId: 'p-live-pro' });
 </script>
 ```
+
+If other scripts need the SDK as a global, use your own name (`window.tiunSdk = tiun`). **Never `window.tiun`**: the snippet script uses that name and replaces it when it loads.
 
 ### React (CRA, Vite, etc.)
 
@@ -279,6 +281,8 @@ If the native host swaps the WebView URL (full reload), no `destroy()` is needed
 
 The question is: *can the SDK subtree remount in this host?*
 
+**Every "Yes" row needs `@tiun/sdk` 0.12.0 or later.** Before 0.12.0, `init()` after `destroy()` left `checkout()`, `login()`, `start()`, and `setContent()` waiting forever. On older versions, init once at the root and skip `destroy()`, or upgrade. After a re-init, `ready` / `onReady` fire once, `tiun.isReady` stays `true`, and `tiun.user` stays empty until the next login, logout, or checkout — call `tiun.listProductAccess()` / `tiun.checkProductAccess()` if the remounted component needs access right away.
+
 | Situation | Call `destroy()`? | Why |
 |---|---|---|
 | SPA root (Vue `App.vue`, single React root, Svelte/Solid root) | No | Root only unmounts when the document is gone |
@@ -294,4 +298,4 @@ The question is: *can the SDK subtree remount in this host?*
 ## SPA vs MPA gating model
 
 - **SPA** (React Router, Vue Router, SvelteKit, etc.): subscribe to `userChange` once at the root; gate components reactively. Entitlements can change mid-session.
-- **MPA** (classic server-rendered apps): `init` runs per page load; gating happens primarily on the server via [server-verification.md](server-verification.md). Client-side gating in an MPA is cosmetic only — the server is the gatekeeper.
+- **MPA** (classic server-rendered apps): `init` runs per page load; the server usually renders the content, so checking access there is the natural fit — see [server-verification.md](server-verification.md). Client-side checks still drive buttons, badges, and pricing on the page.

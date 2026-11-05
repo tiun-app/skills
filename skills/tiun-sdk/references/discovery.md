@@ -27,18 +27,20 @@ Subscription, one-time purchase, time-based, or a combination? Map user language
 | User says... | Mode |
 |---|---|
 | "subscription", "recurring", "members", "paid account", "tiers" | Subscription |
-| "buy once", "pay once", "one-time", "lifetime", "lifetime deal", "single payment", "unlock forever", "fixed fee", "perpetual license", "no subscription" | One-time |
+| "buy once", "pay once", "one-time", "lifetime", "lifetime deal", "single payment", "unlock forever", "fixed fee", "perpetual license", "no subscription" | One-time (permanent, once per customer) |
+| "buy again", "ticket", "booking", "pay per article", "reference ID", "repeat purchases" | One-time, **repeatable** — see [one-time.md](one-time.md) |
+| "expires after", "N-day pass", "limited access" on a purchase that does not renew | One-time, **limited access** |
 | "article paywall", "watch then pay", "session", "no account", "first N seconds free", "donation prompt" | Time-based |
 | "videos/articles behind a paywall", "premium content" (ambiguous) | **Ask** — don't guess |
 | Nothing about access model | **Ask** — don't guess |
 
-Subscription and one-time share an entry point (`tiun.checkout`) but differ in lifecycle — one-time entitlements are permanent (see [one-time.md](one-time.md)). If the user is clearly checkout-based but hasn't said whether it recurs, **ask**; the answer changes whether you generate renewal/cancellation handling at all.
+Subscription and one-time share an entry point (`tiun.checkout`) and differ in lifecycle. A one-time product does not renew or cancel. By default access is permanent and the customer buys it once. **Limited access** and **Repeat purchases** are optional switches on that product (see [one-time.md](one-time.md)). If the user is clearly checkout-based but hasn't said whether it recurs, and hasn't said whether access expires or can be bought again, **ask**. The answer changes whether you generate renewal handling, an end date, or a `referenceId`.
 
 **Do not infer mode from the account's inventory.** What the MCP reports is what *exists*, not what the integrator wants to *build*. A provider with one product type today may add another tomorrow.
 
 Suggested question (when ambiguous):
 
-> Do you want **subscription** access (accounts + recurring billing + per-product tiers, e.g. "$9.99/month for premium videos"), a **one-time purchase** (pay once, keep access forever, e.g. "€240 for an onboarding package"), or **time-based** access (anonymous per-session metering, e.g. "watch any video, billed per minute up to a monthly cap")? Or a combination?
+> Do you want **subscription** access (accounts + recurring billing + per-product tiers, e.g. "$9.99/month for premium videos"), a **one-time purchase** (pay once; access stays unless you turn on limited access, e.g. "€240 for an onboarding package" or a 30-day pass), a **repeatable one-time purchase** (the same product again, once per article or booking), or **time-based** access (anonymous per-session metering, e.g. "watch any video, billed per minute up to a monthly cap")? Or a combination?
 
 ## 0c. Identifiers
 
@@ -51,7 +53,7 @@ tiun runs two independent environments. Each has:
 - Its own snippet ID
 - Its own product catalog (sandbox products do not exist in live and vice versa)
 - Its own product ID prefix: `p-test-...` for sandbox, `p-live-...` for live
-- Its own API keys (for server-side verification)
+- Its own API keys (for server-side verification) and its own webhook endpoints (**API & Webhook**)
 
 `localhost` is blocked in live. Local development needs `sandbox: true` plus a sandbox snippet ID. Production deploys use live (no `sandbox` flag, live snippet ID, `p-live-...` product IDs). In React Native, the same choice is made with `host` (`https://api-sandbox.tiun.live` for sandbox, omitted for live).
 
@@ -75,13 +77,13 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 ### One-time, MCP present
 
 1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
-2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means.
+2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Ask, or read those fields when the product payload includes them. For a repeatable product, ask which ID in the app is the `referenceId`, and whether the project has a backend that serves the content (check on the server) or should check in the browser with `tiun.checkProductAccess()` (`@tiun/sdk` 0.12.0+).
 3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### One-time, no MCP
 
 1. Ask for `snippetId` (from `my.tiun.business`).
-2. For each product: ask the `productId` and a label (e.g. `lifetime = p-live-lifetime`).
+2. For each product: ask the `productId` and a label (e.g. `lifetime = p-live-lifetime`). Ask whether **Repeat purchases** or **Limited access** is on. For a repeatable product, ask which ID in the app is the `referenceId`, and whether the project has a backend that serves the content (check on the server) or should check in the browser with `tiun.checkProductAccess()` (`@tiun/sdk` 0.12.0+).
 3. Ask which environment (live or sandbox). The product-ID prefix is a strong hint — `p-test-...` ⇒ sandbox, `p-live-...` ⇒ live.
 
 ### Time-based, MCP present

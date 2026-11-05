@@ -10,6 +10,8 @@ pnpm add @tiun/sdk
 yarn add @tiun/sdk
 ```
 
+`referenceId` on `tiun.checkout` and `hasNewsletterOptIn` on the user object need `@tiun/sdk` **0.11.0** or later. `appearance` needs **0.10.0** or later.
+
 For vanilla HTML/JS without a bundler, import the ESM build from a CDN:
 
 ```html
@@ -36,7 +38,7 @@ tiun.init({
 });
 ```
 
-`tiun.init()` is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
+Call `tiun.init()` **once**, ideally in the app root. It is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
 
 The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 15 in `SKILL.md`).
 
@@ -63,7 +65,7 @@ Pick one. Mixing both leads to a double-loaded snippet and conflicting config.
 
 ## Environments — live vs sandbox
 
-tiun runs **two fully independent parallel environments**: live (real customers and payments) and sandbox (simulated payments, separate catalog). Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, customers, and analytics. Nothing syncs between them.
+tiun runs **two fully independent parallel environments**: live (real customers and payments) and sandbox (simulated payments, separate catalog). Each has its own snippet ID, products, product ID prefix (`p-live-...` vs `p-test-...`), API keys, webhook endpoints, customers, and analytics. Nothing syncs between them.
 
 ```javascript
 // Sandbox
@@ -79,9 +81,9 @@ tiun.init({ snippetId: 'YOUR_LIVE_SNIPPET_ID', language: 'en' });
 
 The dashboard has a sandbox toggle that switches which environment you are viewing/editing. Keep the SDK's `sandbox` flag aligned with the dashboard view while you're working, or snippet IDs and product IDs will not line up with what the dashboard shows.
 
-**Environment setup (registered domain).** The domain the SDK runs on must be registered — that registration is what authorizes it (CORS). It lives in the dashboard under **Settings → Environment setup → Web → Live domain**, and each environment (live and sandbox) has its own. The integrator enters **one** domain per environment; any additional domains are managed by tiun via support@tiun.io. The same page holds the **App** section (an app scheme) used by the React Native SDK — see [react-native.md](react-native.md).
+**Environment setup (registered domain).** The domain the SDK runs on must be registered — that registration is what authorizes it (CORS). It lives in the dashboard under **Settings → Environment setup**, and each environment (live and sandbox) has its own. The integrator enters **one** domain per environment; any additional domains are managed by tiun via support@tiun.io. The same page holds the **App** section (an app scheme) used by the React Native SDK — see [react-native.md](react-native.md).
 
-Enabling sandbox needs no domain: the first click on the dashboard's **Sandbox** toggle opens a dialog with a plain **Enable** button. Until live is configured, the dashboard prompts "Set up your live environment", which leads to the same Environment setup page.
+Turning on sandbox (the **Sandbox** toggle in the dashboard sidebar) needs no domain and nothing to configure. Until live is configured, the dashboard reminds the user to set it up in **Settings → Environment setup**.
 
 A request from an unregistered domain fails the same way a wrong snippet ID does. When a deploy works locally but not on a hosted site, check that its domain is in **Settings → Environment setup** for the matching environment before re-checking IDs.
 
@@ -110,8 +112,10 @@ The `snippetId` is not a secret — it identifies an environment, not a user —
 
 - `tiun.init(config)`: call on app start. Idempotent.
 - `tiun.waitForReady()`: returns a Promise that resolves when the hosted snippet is loaded.
-- `tiun.destroy()`: tear down the instance. Only needed where the subtree can remount — see the lifecycle matrix in [frameworks.md](frameworks.md).
-- `tiun.isInitialized` / `tiun.isReady`: boolean status flags.
+- `tiun.destroy()`: tear down the instance. Only needed where the subtree can remount — see the lifecycle matrix in [frameworks.md](frameworks.md). `init()` again after `destroy()` works from `@tiun/sdk` 0.12.0.
+- `tiun.isInitialized` / `tiun.isReady`: boolean status flags. From 0.12.0, `isReady` stays `true` after `destroy()`.
+
+**Never assign the SDK to `window.tiun`.** The snippet script uses that name and replaces it when it loads. Keep the imported `tiun`, or use your own global name such as `window.tiunSdk = tiun`.
 
 ## Where to call `init`
 

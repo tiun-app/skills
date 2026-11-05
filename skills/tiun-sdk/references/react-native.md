@@ -7,7 +7,7 @@ Upstream guide: "Monetize in React Native" on [docs.tiun.io](https://docs.tiun.i
 ## What it covers
 
 - **Authentication** — `login()` / `logout()`, session restored at launch.
-- **Checkout** — **subscriptions and one-time purchases** via `checkout({ productId })`.
+- **Checkout** — **subscriptions and one-time purchases** via `checkout({ productId })`. A repeatable one-time product also takes `referenceId` (`@tiun/react-native-sdk` 0.4.0 or later). See [one-time.md](one-time.md).
 - **Not time-based.** There is no `start()`, `paywallShow`, or `paywallHide` in React Native. If the user wants time-based billing in a React Native app, say so plainly and point them at support@tiun.io — do not improvise a WebView workaround.
 
 The SDK renders the tiun snippet inside a `WebView`, bridges login and checkout to native, and binds the user's session to a hardware-backed device key (Secure Enclave / Android Keystore). The session survives restarts without the app storing anything.
@@ -34,6 +34,8 @@ When either is reported, compare the three places character for character before
 Before writing config, **ask for the app's existing URL scheme** (check `Info.plist` / `AndroidManifest.xml` first — many apps already register one). Do not invent a scheme; reuse the app's own and remind the user to enter it in the dashboard. The dashboard holds **one** app scheme per environment; additional schemes are managed by tiun via support@tiun.io.
 
 ## Install
+
+`referenceId` on checkout and `hasNewsletterOptIn` on the user need `@tiun/react-native-sdk` **0.4.0** or later. `appearance` needs **0.3.0** or later.
 
 ```bash
 npm install @tiun/react-native-sdk react-native-webview \
@@ -178,7 +180,7 @@ Switch `host`, snippet ID, and product IDs **together** — IDs never cross envi
 | State | Type | Notes |
 |---|---|---|
 | `isAuthenticated` | `boolean` | |
-| `user` | `TiunUser \| null` | `{ userId, email, productAccess: string[] }` |
+| `user` | `TiunUser \| null` | `{ userId, email, hasNewsletterOptIn, productAccess: string[] }` — `hasNewsletterOptIn` needs 0.4.0 or later |
 | `ready` | `boolean` | Snippet initialized. |
 | `cryptoOk` | `boolean \| null` | `false` ⇒ authentication cannot work on this device. |
 
@@ -186,22 +188,26 @@ Switch `host`, snippet ID, and product IDs **together** — IDs never cross envi
 |---|---|
 | `login()` | `void` |
 | `logout()` | `void` — clears session and device credentials |
-| `checkout({ productId })` | `void` |
-| `getUserVerificationToken()` | `Promise<string \| null>` — 5-minute JWT; `null` if signed out or no answer within 5s |
+| `checkout({ productId, referenceId })` | `void` — `referenceId` is required for a repeatable one-time product and omitted otherwise. Passing it on any other product is a configuration error. 1–200 characters: letters, digits, `-`, `_`, `.`, no spaces (0.4.0 or later). See [one-time.md](one-time.md). |
+| `getUserVerificationToken()` | `Promise<string \| null>` — 5-minute JWT; `null` if signed out or no answer within 5s. Fetch a fresh one per backend request. |
+| `listProducts()` | `Promise<Product[]>` — 0.5.0 or later |
+| `getProduct(productId)` | `Promise<ProductDetail>` — localized `pricingLine`; 0.5.0 or later |
+| `listProductAccess()` | `Promise<ProductAccess[]>` — `[]` when signed out; 0.5.0 or later |
+| `checkProductAccess(productId, { referenceId })` | `Promise<ProductAccessCheck>` — `{ hasAccess: false, access: null }` when signed out or without access; 0.5.0 or later |
 
-`login`, `logout`, and `checkout` are **queued until ready** — wire them straight to buttons. Do not wrap them in `ready` guards; use `ready` only for a loading state.
+`login`, `logout`, and `checkout` are **queued until ready** — wire them straight to buttons. Do not wrap them in `ready` guards; use `ready` only for a loading state. The four product methods also wait for ready. They behave like the web SDK's (see [api-reference.md](api-reference.md#products)): signed out is not an error, failures reject with `{ code, message, details? }` (`http_<status>`, `network_error`, `timeout` after 10s, `invalid_argument`, `destroyed` when the provider unmounts, `unknown_error`) and don't fire the `error` event, and for a list of items one `listProductAccess()` call beats `checkProductAccess()` per item. They're stable callbacks, safe in `useEffect` dependencies.
 
 `useTiunEvent(event, handler)` subscribes and unsubscribes on unmount automatically; the latest handler is always used, so don't memoize it.
 
 | Event | Payload |
 |---|---|
 | `ready` | — |
-| `userChange` | `{ isAuthenticated, user }` — **no `event` field** |
+| `userChange` | `{ event, isAuthenticated, user }` — `event` from 0.5.0 |
 | `login` | `{ user }` |
 | `logout` | — |
 | `error` | `{ code?, message?, details? }` |
 
-**`userChange` has no `event` field in React Native.** When porting web code, replace `data.event === 'login'` / `'logout'` checks with the separate `login` and `logout` events. There is no `'checkout'` discriminator — treat `userChange` as "re-read `user`". It also fires on the session restore at launch.
+**`userChange` carries `event` from `@tiun/react-native-sdk` 0.5.0**, with the same values as the web SDK: `'init'`, `'login'`, `'logout'`, `'checkout'` (access changed, gained or lost — including a repeatable product bought with a new reference ID), and `'update'` (profile changed). Before 0.5.0 there was no `event`; use the separate `login` / `logout` events there. Either way, re-check access on every `userChange`. It also fires on the session restore at launch.
 
 Prefer reading `user` from `useTiun()` for rendering; use `useTiunEvent('userChange', …)` only to *react* (refetch, reset a screen, mirror into a store).
 
@@ -225,7 +231,22 @@ export function useTier(): Tier {
 }
 ```
 
-The web skill's mode rules still hold: purchases open `checkout({ productId })`, account entry opens `login()` (Rule 19); one-time product IDs are permanent in `productAccess` (Rule 13); never infer mode from inventory (Rule 12). The hosted overlay is a black box here too (Rule 5) — don't inject into or restyle the WebView content.
+The web skill's mode rules still hold: purchases open `checkout({ productId })` (plus `referenceId` when the product is repeatable), account entry opens `login()` (Rule 19); one-time access follows Rule 13; never infer mode from inventory (Rule 12). The hosted overlay is a black box here too (Rule 5) — don't inject into or restyle the WebView content. When a subscription or a limited-access purchase ends, `userChange` fires with `event: 'checkout'` (0.5.0+): re-read `user.productAccess`.
+
+For a repeatable product, the product ID shows up in `productAccess` after the first reference and stays until the last one ends, and it never names which reference was bought. `checkProductAccess(productId, { referenceId })` is the check, on mount and on every `userChange`:
+
+```tsx
+const { checkProductAccess } = useTiun();
+const [owned, setOwned] = useState(false);
+
+const recheck = () =>
+  checkProductAccess('p-live-article', { referenceId: articleId })
+    .then(({ hasAccess }) => setOwned(hasAccess))
+    .catch(() => setOwned(false));
+
+useEffect(() => { recheck(); }, [articleId]);
+useTiunEvent('userChange', recheck);
+```
 
 ## Server verification
 

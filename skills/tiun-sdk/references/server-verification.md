@@ -1,14 +1,14 @@
 # Server-Side Verification
 
-Trust nothing the client sends about its own entitlements. When access must be trusted (paid API endpoints, protected downloads, premium content payloads), verify on the server.
+When the integrator's backend serves paid content (paid API endpoints, protected downloads, premium content payloads), verify on the server before returning it. It's the more secure setup: the content stays on the server until access is confirmed, and the server only trusts what tiun's API tells it. Apps without a backend can check access in the browser instead — see [api-reference.md](api-reference.md#products).
 
 There are three server-side flows:
 
-- **User verification** — identity + `productAccess` entitlements. JWT-based. Use for **subscription and one-time purchase** gating and authenticated-only endpoints. Both are a `productAccess` check, so the code is identical; a one-time product ID simply never disappears from the array.
+- **User verification** — identity plus entitlements. JWT-based. Use for authenticated-only endpoints, subscriptions, and one-time purchases. Subscriptions and non-repeatable one-time products (including **limited access**) are a `user.productAccess` check. A limited-access one-time product ID leaves the array when the purchase reaches its end date. **Repeatable** one-time products are checked per reference ID after verification — see [Repeatable product access](#repeatable-product-access).
 - **Session verification** — time-based billing sessions. Session-ID-based. Use to confirm an active time-based session before serving premium content.
 - **User info lookup** — read a known user's current state by `userId`, with no session and no token. A read, **not** an authentication check. See [User info lookup](#user-info-lookup-read-a-known-users-state).
 
-All three use the same set of API keys (created in the dashboard under **APIs → Create new key**) and the same per-environment base URLs.
+All three use the same API keys (dashboard: **API & Webhook → API Keys**) and the same per-environment base URLs. Webhooks, which are separate from these calls, are in [webhooks.md](webhooks.md).
 
 ## Base URLs and API keys
 
@@ -21,7 +21,7 @@ API keys are environment-specific — sandbox keys do not work against live and 
 
 ## User verification (auth + `productAccess` entitlements)
 
-JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. Do not cache verification results past the token's lifetime; the frontend can fetch a fresh token whenever you need one.
+JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. **Fetch a fresh token for every request** to your backend. Requests that run in parallel can each fetch their own (each call gets a token from `@tiun/sdk` 0.12.0; before, all but the last returned `null`). A `null` token means there's none to send: the user isn't signed in, or the request failed — `tiun.isAuthenticated` tells you which. Don't cache verification results past the token's lifetime either.
 
 ### Flow
 
@@ -49,7 +49,7 @@ JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. 
    | `200`  | User object returned — read the body. |
    | `401`  | The API key is invalid. |
 
-   `200` response body:
+   `200` response body. `user` is `null` when `isAuthenticated` is `false`:
 
    ```json
    {
@@ -57,20 +57,24 @@ JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. 
      "user": {
        "userId": "u-...",
        "email": "user@example.com",
+       "hasNewsletterOptIn": false,
        "productAccess": ["p-live-pro"]
      }
    }
    ```
 
-4. Authorize the request based on `isAuthenticated` and `user.productAccess`, not on anything else the client sent. A `200` with `isAuthenticated: false` means the API key was accepted but the underlying user session is no longer active — treat as unauthenticated.
+   `hasNewsletterOptIn` is present on `@tiun/sdk` 0.11.0+ and `@tiun/react-native-sdk` 0.4.0+ user objects as well. The verification response uses the field name `user`. Do not read `userInfo`.
+
+4. Authorize the request based on `isAuthenticated` and `user.productAccess`, not on anything else the client sent. A `200` with `isAuthenticated: false` means the API key was accepted but the underlying user session is no longer active — treat as unauthenticated. For a repeatable one-time product, `productAccess` is not the entitlement check — continue with [Repeatable product access](#repeatable-product-access).
 
 ### Multiple plans
 
 If you offer tiers, check from the highest applicable tier down:
 
 ```javascript
-const hasPro   = user.user?.productAccess?.includes('p-live-pro');
-const hasLight = user.user?.productAccess?.includes('p-live-light');
+// `user` is the `user` object from the v2 verification response
+const hasPro   = user?.productAccess?.includes('p-live-pro');
+const hasLight = user?.productAccess?.includes('p-live-light');
 
 if (hasPro) {
   // serve full Pro content
@@ -105,6 +109,7 @@ Response codes:
 {
   "userId": "u-...",
   "email": "user@example.com",
+  "hasNewsletterOptIn": false,
   "productAccess": ["p-live-pro"]
 }
 ```
@@ -118,7 +123,55 @@ It is the easier call, so it is the one an agent reaches for by mistake. The dif
 | **User verification** (JWT) | "Is the caller of *this request* that user, right now?" | A live session — the frontend fetches a fresh token |
 | **User info lookup** | "What does user `X` currently have?" | Only a `userId` you already trust |
 
-Authorizing a request with this endpoint means trusting a `userId` the caller supplied — anyone who knows or guesses another user's ID gets their entitlements. **Never authorize an incoming request with it.** Use it for work that happens outside a user session and already knows whose data it is: refreshing entitlements in your own database, a nightly reconciliation job, an admin or support screen, enriching a record after the JWT flow already established identity.
+Authorizing a request with this endpoint means trusting a `userId` the caller supplied — anyone who knows or guesses another user's ID gets their entitlements. **Never authorize an incoming request with it.** Use it for work that happens outside a user session and already knows whose data it is: refreshing entitlements in your own database, a nightly reconciliation job, an admin or support screen, enriching a record after the JWT flow already established identity. Webhook handlers use this lookup when `payload.reference` is `null` — see [webhooks.md](webhooks.md).
+
+## Repeatable product access
+
+A repeatable one-time product is identity verification plus a per-reference check. `user.productAccess` lists product IDs and does not say which `referenceId` was bought.
+
+After `POST /live_api/s2s/v2/users/verification` returns `isAuthenticated: true`, call:
+
+```
+GET {BASE_URL}/live_api/s2s/v1/users/{userId}/product_access/{productId}?referenceId={referenceId}
+X-TIUN-API-KEY: <your API key from the dashboard>
+```
+
+`userId` comes from `user.userId`. `referenceId` is the value your app passed to `checkout`. Use the base URL and API key of the same environment as the frontend.
+
+| Status | Meaning |
+|---|---|
+| `200` | Access result — read the body. |
+| `400` | The request is invalid. |
+| `401` | The API key is invalid. |
+| `404` | The user or product does not exist. |
+
+`200` when the user has that purchase:
+
+```json
+{
+  "hasAccess": true,
+  "access": {
+    "productId": "p-live-article",
+    "referenceId": "article-1042",
+    "type": "OneTime",
+    "activatedAt": "2026-11-02T09:21:58Z",
+    "expiresAt": null
+  }
+}
+```
+
+`expiresAt` is `null` unless the product has **limited access**. Without access, `hasAccess` is `false` and there is no `access` object. Serve the item only when `hasAccess` is `true`.
+
+To list every product and reference pair for a user:
+
+```
+GET {BASE_URL}/live_api/s2s/v1/users/{userId}/product_access
+X-TIUN-API-KEY: <your API key from the dashboard>
+```
+
+`200` body: `{ "data": [ /* the same access objects */ ] }`.
+
+The frontend can check the same thing without a backend with `tiun.checkProductAccess(productId, { referenceId })` (`@tiun/sdk` 0.12.0+), and list it with `tiun.listProductAccess()`. Same access object shape. See [one-time.md](one-time.md#repeat-purchases).
 
 ## Session verification (time-based)
 

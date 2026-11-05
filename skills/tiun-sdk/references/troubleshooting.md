@@ -18,6 +18,22 @@
 
 See the troubleshooting table in [react-native.md](react-native.md#troubleshooting). The two most common ones are both return-scheme mismatches. Login or checkout opens and closes immediately → `returnUrl`'s scheme isn't the dashboard App scheme for the environment `host` points at. Payment succeeds but checkout never returns to the app → the native registration doesn't match `returnUrl`'s scheme, or iOS is missing `RCTLinkingManager` forwarding, or Android is missing `android:launchMode="singleTask"`.
 
+## `checkout()` / `login()` do nothing after a component remount
+
+`init()` after `destroy()` needs `@tiun/sdk` **0.12.0** or later. On older versions, `checkout()`, `login()`, `start()`, and `setContent()` wait forever after a remount. Upgrade, or init once at the app root without `destroy()`. After a re-init on 0.12.0, `tiun.user` stays empty until the next login, logout, or checkout — use `tiun.listProductAccess()` / `tiun.checkProductAccess()` for access right away.
+
+## Code that uses `window.tiun` stops working
+
+Something assigned the SDK to `window.tiun`. The snippet script uses that name and replaces it when it loads. Use the imported `tiun`, or another global name such as `window.tiunSdk`.
+
+## A repeatable purchase doesn't show up
+
+The product ID shows up in `productAccess` after the first reference and stays until the last one ends, and it never names which reference was bought. A later purchase can leave that array looking the same. `tiun.checkProductAccess(productId, { referenceId })` is the check (0.12.0+), on every `userChange` — it fires with `event: 'checkout'` for that purchase. Pass the same `referenceId` you passed to `checkout()`.
+
+## Product methods reject
+
+`listProducts`, `getProduct`, `listProductAccess`, and `checkProductAccess` reject with `{ code, message, details? }` and don't fire the `error` event, so wrap them in `try` / `catch`. `http_404` from `getProduct()` is an unknown product ID (check the environment prefix); `timeout` means no answer within 10s; `ssr` means it ran during server-side rendering. Signed out is **not** an error: you get `[]` or `{ hasAccess: false, access: null }`.
+
 ## `userChange` never fires
 
 - Confirm there is an `on('userChange', ...)` subscription and that it is registered before (or synchronously after) `init`.
@@ -30,7 +46,8 @@ See the troubleshooting table in [react-native.md](react-native.md#troubleshooti
 ## Server-side verification fails
 
 - **401**: API key is wrong, or doesn't belong to the environment the token came from. Sandbox keys do not work against live, and vice versa.
-- **JWT expired**: verification tokens are valid for 5 minutes. Re-fetch via `tiun.getUserVerificationToken()`; do not cache verification results past the token's lifetime.
+- **JWT expired**: verification tokens are valid for 5 minutes. Fetch a fresh one via `tiun.getUserVerificationToken()` for every request, and don't cache verification results past the token's lifetime.
+- **`null` token on parallel requests**: before `@tiun/sdk` 0.12.0, parallel `getUserVerificationToken()` calls returned `null` for all but the last. Upgrade.
 - **Wrong header name**: it's `X-TIUN-API-KEY`. (Older example code referencing `X-ACCESS-TOKEN` is out of date.)
 - **404 on session verification**: the session has expired, was invalidated, or the user is out of funds — fail closed and deny the request.
 
@@ -50,7 +67,8 @@ Expected. The overlay's internals are shadow DOM, unversioned, and change withou
 | Checkout not opening | Wrong/stale product ID, or env mismatch | Compare ID prefix and SDK `sandbox` flag against dashboard view |
 | Connect overlay not opening | SDK not initialized, or no time-based product on the snippet | Confirm `init` ran and the snippet has a time-based product |
 | Sandbox payments not working | App and dashboard on different envs | Use sandbox snippet ID + `p-test-...` + `sandbox: true`; dashboard sandbox toggle on |
-| User state not updating | Relying only on `tiun.user` snapshot | Listen for `userChange` and update from the event payload |
+| User state not updating | Relying only on `tiun.user` snapshot | Listen for `userChange` and re-check access on every fire |
+| Methods hang after remount | `init()` after `destroy()` on `@tiun/sdk` < 0.12.0 | Upgrade to 0.12.0, or init once at the root |
 | Session not restoring | Different browser or cleared storage | Sessions are per-browser; clearing cookies/site data clears the session |
 | Works locally, fails on deployed site | Domain not registered for that environment | Add it in Settings → Environment setup → Web (extra domains via support@tiun.io) |
 | RN: login / checkout opens and closes immediately | `returnUrl` scheme not registered as the dashboard App scheme for that environment | Compare `returnUrl` with Settings → Environment setup → App scheme in the environment `host` targets — see [react-native.md](react-native.md) |

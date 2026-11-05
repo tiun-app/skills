@@ -1,6 +1,6 @@
 # Subscriptions
 
-Use subscriptions when you need persistent user accounts and **recurring** revenue (SaaS, memberships). For a product bought once with permanent access, see [one-time.md](one-time.md) instead — it shares this entry point but has no renewal, trial, or expiry.
+Use subscriptions when you need persistent user accounts and **recurring** revenue (SaaS, memberships). For a single fixed fee — permanent by default, or with limited access or repeat purchases — see [one-time.md](one-time.md). It shares this entry point and has no renewal, trial, or cancellation.
 
 If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go back — confirm the mode (subscription, one-time, or time-based) and gather identifiers before generating code.
 
@@ -51,19 +51,22 @@ Opening checkout doesn't grant or gate anything by itself. Paid functionality st
 
 ## Branching on `userChange.event`
 
-The `event` field tells you what triggered the fire (`'init' | 'login' | 'checkout' | 'logout' | 'update'`). Most gating logic does not need it — `isAuthenticated` + `productAccess` are enough. Branch when you want one-off side effects:
+The `event` field tells you what triggered the fire (`'init' | 'login' | 'logout' | 'checkout' | 'update'`). `'checkout'` means the user's access changed — gained **or lost** — and `'update'` means profile details changed. Gating doesn't need it: re-check `productAccess` on every fire. Branch only for one-off side effects, and for a purchase message check that access was gained:
 
 ```javascript
+let previousAccess = [];
+
 tiun.on('userChange', ({ event, isAuthenticated, user }) => {
-  if (!isAuthenticated) return showSignedOutUI(); // whatever your app shows signed-out visitors
+  const access = user?.productAccess ?? [];
 
   if (event === 'checkout') {
-    showWelcomeToast(`Subscribed to ${user.productAccess.join(', ')}`);
+    const gained = access.filter((id) => !previousAccess.includes(id));
+    if (gained.length) showWelcomeToast(`Subscribed to ${gained.join(', ')}`);
   }
   // event === 'init' on returning visitors — no toast
-  // event === 'update' when entitlements change (renewal, cancellation, tier change).
-  // Subscriptions only — a one-time entitlement never changes. See one-time.md.
+  previousAccess = access;
 
+  if (!isAuthenticated) return showSignedOutUI(); // whatever your app shows signed-out visitors
   renderGatedUI(user);
 });
 ```
@@ -74,6 +77,7 @@ tiun.on('userChange', ({ event, isAuthenticated, user }) => {
 {
   userId: 'u-abc123',
   email: 'user@example.com',
+  hasNewsletterOptIn: false, // @tiun/sdk 0.11.0 or later
   productAccess: ['p-live-pro'],
 }
 ```
@@ -104,14 +108,15 @@ document.querySelector('#buy-pro').onclick =
 
 ## Gating rules
 
-- **UI-level gating**: `user.productAccess.includes(productId)` is sufficient for showing/hiding UI.
-- **Trusted access (paid API, protected downloads, etc.)**: do server-side verification (see [server-verification.md](server-verification.md)). Never trust `productAccess` alone for anything a user could bypass by editing their own client.
+- **In the app**: `user.productAccess.includes(productId)`, re-checked on every `userChange`, is all a subscription needs. It works without a backend.
+- **Dates on an account page** ("Renews" vs "Ends on"): `tiun.listProductAccess()` or `tiun.checkProductAccess(productId)` (`@tiun/sdk` 0.12.0+). `expiresAt` is `null` while the subscription renews and the end of the paid period once it's cancelled.
+- **On the server**: when the integrator's backend serves the paid content (a paid API, protected downloads), verify there before returning it — the more secure setup. See [server-verification.md](server-verification.md).
 
 ## Common mistakes
 
 - **Wrapping `tiun.checkout` / `tiun.login` in helper functions that re-check `isInitialized` and `await waitForReady`.** These methods already do both internally. Call them directly from your event handler.
 - **Reading `tiun.user` once at mount.** Subscription entitlements can change mid-session (upgrade, downgrade, renewal). Use `userChange` as the source of truth, not a one-shot read.
-- **Applying this file's renewal/cancellation handling to a one-time product.** One-time entitlements are permanent — see [one-time.md](one-time.md).
+- **Applying this file's renewal/cancellation handling to a one-time product.** One-time products do not renew or cancel. Limited access and repeat purchases are in [one-time.md](one-time.md).
 - **Opening login from a purchase action.** See [Choosing checkout or login](#choosing-checkout-or-login).
 - **Building custom payment forms.** The checkout overlay is hosted by tiun; do not reimplement card collection.
 - **Reaching into the checkout or login overlay.** It is shadow DOM and off limits — no injected help text, no CSS overrides, no scraping its inputs. Extra copy goes on your own page, next to the trigger. See [overview.md](overview.md#hosted-ui-is-a-black-box).
