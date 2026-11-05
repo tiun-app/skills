@@ -49,7 +49,7 @@ IDs belong to the endpoint's environment.
 
 | `type` | When it is sent | `payload` |
 |---|---|---|
-| `user.create` | The user gives you consent for the first time. That is their first signup with you, usually at sign-in or checkout, whether or not they already have a tiun account. | `user_id` |
+| `user.create` | The user signs up with you, usually at sign-in or checkout. | `user_id` |
 | `user.revoke_consent` | The user withdraws consent to your terms. | `user_id` |
 | `product_access.add` | The user gains access: a completed one-time purchase, each purchase of a repeatable product, or a subscription start. Subscription renewals do not send it again. | `user_id`, `product_id`, `reference` |
 | `product_access.remove` | The user loses access: a subscription ended after cancellation or a permanent payment failure, or a one-time product with limited access reached its end date. | `user_id`, `product_id`, `reference` |
