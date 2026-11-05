@@ -8,7 +8,7 @@ There are three server-side flows:
 - **Session verification** — time-based billing sessions. Session-ID-based. Use to confirm an active time-based session before serving premium content.
 - **User info lookup** — read a known user's current state by `userId`, with no session and no token. A read, **not** an authentication check. See [User info lookup](#user-info-lookup-read-a-known-users-state).
 
-All three use the same API keys (dashboard: **API & Webhook → API Keys → Create new key**) and the same per-environment base URLs. Webhooks, which are separate from these calls, are in [webhooks.md](webhooks.md).
+All three use the same API keys (dashboard: **API & Webhook → API Keys**) and the same per-environment base URLs. Webhooks, which are separate from these calls, are in [webhooks.md](webhooks.md).
 
 ## Base URLs and API keys
 

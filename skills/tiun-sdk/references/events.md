@@ -24,7 +24,7 @@ The `event` field tells you what triggered the fire:
 | `'checkout'` | **The user's access changed** — gained or lost, for any product type. |
 | `'update'`   | Profile details changed (email, newsletter opt-in). |
 
-`'checkout'` fires whenever access changes, not only after a checkout:
+`'checkout'` fires whenever access changes:
 
 - a completed purchase, a subscription that ends, or a limited-access one-time purchase reaching its end date;
 - a repeatable product bought with a new reference ID — `productAccess` doesn't change, but the event still fires;

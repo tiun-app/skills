@@ -81,9 +81,9 @@ tiun.init({ snippetId: 'YOUR_LIVE_SNIPPET_ID', language: 'en' });
 
 The dashboard has a sandbox toggle that switches which environment you are viewing/editing. Keep the SDK's `sandbox` flag aligned with the dashboard view while you're working, or snippet IDs and product IDs will not line up with what the dashboard shows.
 
-**Environment setup (registered domain).** The domain the SDK runs on must be registered — that registration is what authorizes it (CORS). It lives in the dashboard under **Settings → Environment setup → Web → Live domain**, and each environment (live and sandbox) has its own. The integrator enters **one** domain per environment; any additional domains are managed by tiun via support@tiun.io. The same page holds the **App** section (an app scheme) used by the React Native SDK — see [react-native.md](react-native.md).
+**Environment setup (registered domain).** The domain the SDK runs on must be registered — that registration is what authorizes it (CORS). It lives in the dashboard under **Settings → Environment setup**, and each environment (live and sandbox) has its own. The integrator enters **one** domain per environment; any additional domains are managed by tiun via support@tiun.io. The same page holds the **App** section (an app scheme) used by the React Native SDK — see [react-native.md](react-native.md).
 
-Enabling sandbox needs no domain: the first click on the dashboard's **Sandbox** toggle opens a dialog with a plain **Enable** button. Until live is configured, the dashboard prompts "Set up your live environment", which leads to the same Environment setup page.
+Turning on sandbox (the **Sandbox** toggle in the dashboard sidebar) needs no domain and nothing to configure. Until live is configured, the dashboard reminds the user to set it up in **Settings → Environment setup**.
 
 A request from an unregistered domain fails the same way a wrong snippet ID does. When a deploy works locally but not on a hosted site, check that its domain is in **Settings → Environment setup** for the matching environment before re-checking IDs.
 

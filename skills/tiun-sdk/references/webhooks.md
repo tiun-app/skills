@@ -6,7 +6,7 @@ Upstream: [Receive webhooks](https://docs.tiun.io/guides/webhooks/receive-webhoo
 
 ## Setup
 
-Dashboard: **API & Webhook → Webhooks → Add endpoint**. The URL must start with `https://`. Select which events that endpoint receives. More than one endpoint is allowed; each receives only the events selected for it. **Edit** changes the URL or events. **Pause endpoint** stops deliveries until you enable it again. Events that happen while an endpoint is paused are not delivered later.
+Dashboard: add an endpoint under **API & Webhook → Webhooks** — an `https://` URL and the events it receives. More than one endpoint is allowed; each receives only the events picked for it. An endpoint's URL and events can be changed later, and it can be paused to stop deliveries for a while. Events that happen while an endpoint is paused are not delivered later.
 
 Sandbox and live each have their own endpoints. Add both when you ship both environments.
 
@@ -58,7 +58,7 @@ IDs belong to the endpoint's environment.
 
 ## What the handler does
 
-1. Reply with any `2xx` within 30 seconds, then do the slow work. A `4xx`, a `5xx`, a timeout, or a connection failure is retried.
+1. Reply with any `2xx` within 15 seconds, then do the slow work. A `4xx`, a `5xx`, a timeout, or a connection failure is retried.
 2. Skip an `id` you have already handled.
 3. Read current state from tiun and act on that response.
 
@@ -76,13 +76,13 @@ Do not grant access, revoke access, or change stored data from the webhook body 
 
 | Your response | Result |
 |---|---|
-| Any `2xx` within 30 seconds | **Delivered.** No further attempts. |
+| Any `2xx` within 15 seconds | **Delivered.** No further attempts. |
 | `4xx` or `5xx` | **Failed attempt.** Retried. |
-| No response within 30 seconds | **Timeout.** Retried. |
+| No response within 15 seconds | **Timeout.** Retried. |
 | DNS, TLS, or network error | **Failed attempt.** Retried. |
 
 A delivery gets up to **10 attempts** (the first, then retries) spread over about **48 hours**. If none returns `2xx`, the delivery is **Failed** and tiun stops. Dashboard statuses: **Scheduled**, **Retrying**, **Succeeded**, **Failed**, **Cancelled**.
 
-**Resend** on a delivery sends that same event again, with the same `id`. **Send test event** sends a sample payload so you can check the handler without a real purchase. You cannot send a test event to a paused endpoint.
+Resending a delivery from the dashboard sends that same event again, with the same `id`. A test event, sent from the endpoint in the dashboard, is a sample payload for checking the handler without a real purchase. You cannot send a test event to a paused endpoint.
 
 Do not invent event types, signature headers, or payload fields.
