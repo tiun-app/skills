@@ -156,7 +156,7 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 - **Gating a repeatable product with `productAccess.includes(productId)`.** That array cannot tell references apart.
 - **Opening checkout for a repeatable product without `referenceId`.** The overlay stops before payment.
 - **Passing `referenceId` on a product that is not repeatable.** Checkout stops with a configuration error. Omit it for subscriptions, time-based products, and one-time products with Repeat purchases off.
-- **A `referenceId` outside the allowed characters.** Use 1–200 characters: letters, digits, `-`, `_`, or `.`. No spaces.
+- **A `referenceId` outside the allowed characters above.**
 - **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
 - **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
 - **Leaving the buy button up after a confirmed purchase** of that product (default or limited access) or of that reference ID (repeatable). Checkout will not charge again.
