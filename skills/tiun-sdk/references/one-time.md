@@ -160,9 +160,8 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 - **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
 - **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
 - **Leaving the buy button up after a confirmed purchase** of that product (default or limited access) or of that reference ID (repeatable). Checkout will not charge again.
-- **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Limited access removes the ID when the period ends; it does not renew.
+- **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Trials are subscription-only. Limited access removes the ID when the period ends; it does not renew.
 - **Quantity selectors, carts, or credit packs.** Repeat purchases are another `referenceId`, not a quantity.
 - **Subscription copy.** Use "Buy" / "Purchased" / "You own this".
 - **Reading the product type from the ID prefix.** `p-live-…` / `p-test-…` are the environment. `pricingType` distinguishes subscription, one-time, and time-based, and it does not say whether Repeat purchases or Limited access is on. See [mcp.md](mcp.md).
 - **Reaching into the checkout overlay.** See [overview.md](overview.md#hosted-ui-is-a-black-box).
-- **Offering a trial.** Trials are subscription-only.
