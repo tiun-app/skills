@@ -111,7 +111,7 @@ tiun.on('userChange', () => loadArticle(currentArticleId));
 
 Signed out, or no purchase for that reference: `{ hasAccess: false, access: null }`, not an error. For a list of items (an article index, "My purchases"), call `tiun.listProductAccess()` once and match each item's `referenceId`, instead of `checkProductAccess()` per item.
 
-`userChange` fires with `event: 'checkout'` when a repeatable product is bought with a new reference ID. A later reference leaves the product ID in place, so re-checking with `tiun.checkProductAccess(productId, { referenceId })` on every `userChange` is what picks up the purchase.
+`userChange` fires with `event: 'checkout'` when a repeatable product is bought with a new reference ID.
 
 ### On the server
 
@@ -156,13 +156,12 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 - **Gating a repeatable product with `productAccess.includes(productId)`.** That array cannot tell references apart.
 - **Opening checkout for a repeatable product without `referenceId`.** The overlay stops before payment.
 - **Passing `referenceId` on a product that is not repeatable.** Checkout stops with a configuration error. Omit it for subscriptions, time-based products, and one-time products with Repeat purchases off.
-- **A `referenceId` outside the allowed characters.** Use 1–200 characters: letters, digits, `-`, `_`, or `.`. No spaces.
+- **A `referenceId` outside the allowed characters above.**
 - **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
 - **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
 - **Leaving the buy button up after a confirmed purchase** of that product (default or limited access) or of that reference ID (repeatable). Checkout will not charge again.
-- **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Limited access removes the ID when the period ends; it does not renew.
+- **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Trials are subscription-only. Limited access removes the ID when the period ends; it does not renew.
 - **Quantity selectors, carts, or credit packs.** Repeat purchases are another `referenceId`, not a quantity.
 - **Subscription copy.** Use "Buy" / "Purchased" / "You own this".
 - **Reading the product type from the ID prefix.** `p-live-…` / `p-test-…` are the environment. `pricingType` distinguishes subscription, one-time, and time-based, and it does not say whether Repeat purchases or Limited access is on. See [mcp.md](mcp.md).
 - **Reaching into the checkout overlay.** See [overview.md](overview.md#hosted-ui-is-a-black-box).
-- **Offering a trial.** Trials are subscription-only.
