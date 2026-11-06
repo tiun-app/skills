@@ -94,7 +94,7 @@ Failures reject the Promise with `TiunError { code, message, details? }`. They d
 | `ssr` | Web: called during server-side rendering. |
 | `unknown_error` | Anything else. |
 
-Log `code`, show `message`; don't build app logic on specific codes (Rule 17), apart from treating a rejection as "couldn't check".
+Log `code`, show `message`; don't build app logic on specific codes (Rule 16), apart from treating a rejection as "couldn't check".
 
 ## Properties
 

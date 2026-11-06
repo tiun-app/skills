@@ -40,7 +40,7 @@ tiun.init({
 
 Call `tiun.init()` **once**, ideally in the app root. It is **idempotent**: calling it again on an initialized instance merges config rather than re-initializing. You can safely call it from multiple mount points (e.g. a React `useEffect` and a Nuxt plugin) without a guard. `tiun.destroy()` is what fully clears listeners, runtime config, and cached user state.
 
-The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 15 in `SKILL.md`).
+The SDK automatically routes to the correct API host based on the `sandbox` flag — do not pass `baseUrl` (it is an internal-only field; see Rule 14 in `SKILL.md`).
 
 ### Config options
 
