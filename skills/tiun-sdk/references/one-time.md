@@ -111,7 +111,7 @@ tiun.on('userChange', () => loadArticle(currentArticleId));
 
 Signed out, or no purchase for that reference: `{ hasAccess: false, access: null }`, not an error. For a list of items (an article index, "My purchases"), call `tiun.listProductAccess()` once and match each item's `referenceId`, instead of `checkProductAccess()` per item.
 
-`userChange` fires with `event: 'checkout'` when a repeatable product is bought with a new reference ID. A later reference leaves the product ID in place, so re-checking with `tiun.checkProductAccess(productId, { referenceId })` on every `userChange` is what picks up the purchase.
+`userChange` fires with `event: 'checkout'` when a repeatable product is bought with a new reference ID.
 
 ### On the server
 
