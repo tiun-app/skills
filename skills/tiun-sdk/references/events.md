@@ -27,7 +27,7 @@ The `event` field tells you what triggered the fire:
 `'checkout'` fires whenever access changes:
 
 - a completed purchase, a subscription that ends, or a limited-access one-time purchase reaching its end date;
-- a repeatable product bought with a new reference ID. The product ID shows up in `productAccess` after the first reference and stays until the last one ends, and it never names which reference was bought. `tiun.checkProductAccess(productId, { referenceId })` is the check. A later reference leaves that product ID in place, and the event still fires;
+- a repeatable product bought with a new reference ID; `productAccess` does not name it;
 - access that changed in another tab, once this tab is visible again.
 
 **Rule: re-check access on every `userChange`.** Read `user.productAccess` for subscriptions and one-time products; call `tiun.checkProductAccess(productId, { referenceId })` for a repeatable product (or `tiun.listProductAccess()` for a "My purchases" list). Branch on `event` only for one-off side effects (e.g. a "Welcome!" toast on `'login'` but not on `'init'`). For a post-purchase message on `'checkout'`, check that access was gained, since `'checkout'` also fires when access ends.
