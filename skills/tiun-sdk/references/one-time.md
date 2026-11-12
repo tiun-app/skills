@@ -43,14 +43,12 @@ Leave `referenceId` off checkout unless the product has **Repeat purchases** tur
 | Trial | Optional | None | None | None |
 | After payment | Renews until it ends | Stays in `productAccess` | Leaves `productAccess` at the end date | Checked per `referenceId` with `checkProductAccess()` or on the server |
 | Cancel | Yes | No | No | No |
-| Buy again | After it ends | Never | Never | Once per `referenceId` |
+| Buy again | After it ends | Never | After access ends | Once per `referenceId` |
 | Tiers | Yes | No | No | No |
 
 ## Bought once per customer
 
-This is the default, and it still applies to a product that has limited access and does **not** have Repeat purchases.
-
-tiun blocks a second purchase before any money moves:
+While the customer has access, tiun blocks a second purchase before any money moves:
 
 - **Signed in and already entitled** — checkout links the existing entitlement and shows an "already purchased, no new charge was made" screen.
 - **Signed out** — checkout signs the customer in. Once it recognizes them as the owner, it shows the same screen. Nothing is charged.
@@ -65,7 +63,7 @@ You cannot cancel a one-time purchase, so you cannot reset it for a test custome
 
 ## Limited access
 
-**Limited access** ends access a count of **days, weeks, months, or years** after the day of purchase. When that date is reached, tiun removes the product ID from `productAccess` and fires `userChange`. Nothing starts a new period.
+**Limited access** ends access a count of **days, weeks, months, or years** after the day of purchase. When that date is reached, tiun removes the product ID from `productAccess` and fires `userChange`. Nothing starts a new period. After it ends, they can buy it again.
 
 Gate the same way as the default product: `productAccess.includes(productId)` is true until the end date and false after it. Do not add a renewal job, a cancel action, or a trial.
 
@@ -86,7 +84,7 @@ tiun.checkout({
 
 Requires `@tiun/sdk` **0.11.0** or later. React Native: `checkout({ productId, referenceId })` from `useTiun()`, `@tiun/react-native-sdk` **0.4.0** or later.
 
-The once-per-customer rule applies **per reference ID**. A new reference ID charges again. The same reference ID shows the "already purchased" screen and charges nothing.
+The once-per-customer rule applies **per reference ID**. A new reference ID charges again. The same reference ID shows the "already purchased" screen and charges nothing while its access lasts.
 
 `productAccess` is a list of product IDs. The product ID shows up after the first reference and stays until the last one ends, and it never names which reference was bought, so do not gate a repeatable product with `productAccess.includes(productId)`. Check the product and the reference ID together, in one of two places:
 
@@ -159,7 +157,7 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 - **A `referenceId` outside the allowed characters above.**
 - **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
 - **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
-- **Leaving the buy button up after a confirmed purchase** of that product (default or limited access) or of that reference ID (repeatable). Checkout will not charge again.
+- **Leaving the buy button up while the customer has access** to that product or reference ID. Checkout will not charge again.
 - **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Trials are subscription-only. Limited access removes the ID when the period ends; it does not renew.
 - **Quantity selectors, carts, or credit packs.** Repeat purchases are another `referenceId`, not a quantity.
 - **Subscription copy.** Use "Buy" / "Purchased" / "You own this".
