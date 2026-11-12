@@ -2,7 +2,7 @@
 
 A one-time product charges a **single fixed fee**. There is no interval, no trial, no renewal, and no cancellation.
 
-Access is **permanent by default**, and each customer can buy the product **once**. Two optional switches on the product change that. Turn them on in the dashboard under **Products** when you create or edit the product:
+Access is **permanent by default**, and each customer can buy the product **once**. Two optional switches on the product change that. Turn them on in the dashboard or through the MCP one-time tools when you create or edit the product:
 
 - **Limited access** — access ends a set time after purchase. Nothing renews.
 - **Repeat purchases** — the customer can buy the product again, once per `referenceId`. The price is charged each time.
@@ -163,5 +163,5 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 - **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Trials are subscription-only. Limited access removes the ID when the period ends; it does not renew.
 - **Quantity selectors, carts, or credit packs.** Repeat purchases are another `referenceId`, not a quantity.
 - **Subscription copy.** Use "Buy" / "Purchased" / "You own this".
-- **Reading the product type from the ID prefix.** `p-live-…` / `p-test-…` are the environment. `pricingType` distinguishes subscription, one-time, and time-based, and it does not say whether Repeat purchases or Limited access is on. See [mcp.md](mcp.md).
+- **Reading the product type from the ID prefix.** `p-live-…` / `p-test-…` are the environment. `pricingType` distinguishes subscription, one-time, and time-based, and it does not say whether Repeat purchases or Limited access is on. With the MCP, read `oneTime.isRepeatable` and `oneTime.expiry` from `get_products`; ask only when there's no MCP. See [mcp.md](mcp.md).
 - **Reaching into the checkout overlay.** See [overview.md](overview.md#hosted-ui-is-a-black-box).

@@ -8,7 +8,7 @@ The tiun MCP server (`https://mcp.tiun.business/`) gives agents access to the us
 
 **Read the account.** Which providers the user has. The same `providerId` appears once per environment, and each row has that environment's snippet ID and product catalog (every product's ID, pricing type and price). And the tax categories a product can be filed under, with guidance for choosing between them.
 
-**Create and edit products.** One-time and subscription products can be created, and their name and pricing edited, so a missing product doesn't have to interrupt the integration. Time-based products are read-only here — they are created and edited in the dashboard.
+**Create and edit products.** One-time and subscription products can be created and edited, so a missing product doesn't have to interrupt the integration. Editing covers name and pricing, and for a one-time product repeatability and expiry. Time-based products are read-only here — they are created and edited in the dashboard.
 
 The exact call signatures live in the MCP itself; read them there rather than assuming a shape. What the MCP cannot tell you is when *not* to call it, so:
 
@@ -43,7 +43,7 @@ Each product the MCP reports carries a **`pricingType`** — the only reliable s
 | `'OneTime'` | One-time purchase | `tiun.checkout({ productId })` |
 | `'TimeBased'` | Time-based | `tiun.start()` |
 
-**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: a subscription grants a renewable entitlement that can lapse. A one-time purchase is permanent and bought once per customer **by default**. **Limited access** adds an end date, and **Repeat purchases** allows another purchase per `referenceId`. `pricingType: 'OneTime'` does not tell you whether either switch is on. Read those fields when the product payload includes them; otherwise ask. See [one-time.md](one-time.md).
+**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: a subscription grants a renewable entitlement that can lapse. A one-time purchase is permanent and bought once per customer **by default**. **Limited access** adds an end date, and **Repeat purchases** allows another purchase per `referenceId`. `pricingType: 'OneTime'` does not tell you whether either is on. Read `oneTime.isRepeatable` and `oneTime.expiry` (`{ interval, intervalCount }` or `null`) from `get_products`. Ask only when there's no MCP. See [one-time.md](one-time.md).
 
 A product's price arrives in the block matching its pricing type, and each type has its own shape — the MCP documents them, so read the response rather than assuming a field. What matters when you report a price back to the user is that the three are not interchangeable: a one-time fee is charged once, a subscription price recurs on its interval, and a time-based fee is metered usage against a monthly cap. Never present a time-based fee as a subscription price.
 
@@ -53,9 +53,9 @@ The exact call signature is the MCP's to define, but the fields come from the da
 
 | Type | Fields |
 |---|---|
-| **Subscription** | Name (shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
-| **One-time** | Name and price. No interval, no trial. Optional switches, set in the dashboard under **Products**: **Repeat purchases** (buy again, once per `referenceId`; the price is charged each time) and **Limited access** (access ends a count of days, weeks, months, or years after the day of purchase; nothing renews). The two combine. |
-| **Time-based** | Name, interval **1 minute only**, interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
+| **Subscription** | Name (1–36 characters, shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
+| **One-time** | Name (1–36 characters) and price. No interval, no trial. **Repeat purchases** (`isRepeatable`, required on `create_one_time_product` and `update_one_time_product`: buy again, once per `referenceId`; the price is charged each time) and **Limited access** (optional `expiryInterval` + `expiryCount`: `Day` 1–1000, `Week` 1–150, `Month` 1–36, `Year` 1–3; omit both for unlimited access; nothing renews). The two combine. |
+| **Time-based** | Name (1–36 characters), interval **1 minute only**, interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
 
 Two that are easy to get wrong:
 
@@ -64,13 +64,13 @@ Two that are easy to get wrong:
 
 Plus the tax category — required, no default, permanent (above).
 
-**Repeat purchases and Limited access are dashboard switches** on a one-time product. The published description of what the MCP can write — create and edit one-time and subscription products, confirming name, price, interval, tax category, and environment — does not list those two switches as parameters. Do not invent arguments for them. If the connected tool's schema lists them, pass only what that schema documents and include them in the confirmation. If it does not, set them in the dashboard (**Products**), or create the product there.
+**Repeat purchases and Limited access** are `isRepeatable` (required) and an optional `expiryInterval` + `expiryCount` pair on `create_one_time_product` and `update_one_time_product`. `get_products` returns them as `oneTime.isRepeatable` and `oneTime.expiry` (`{ interval, intervalCount }` or `null`). An update replaces those access settings: pass the current `isRepeatable`, and the current expiry as `expiryInterval` and `expiryCount` (`oneTime.expiry.interval` and `oneTime.expiry.intervalCount`). Leaving out both expiry fields clears the expiry.
 
 ## Tax behavior
 
 Subscription and one-time products have a tax behavior setting: `Auto` (default), `Inclusive`, or `Exclusive`. The dashboard labels them Automatic, Include tax, and Exclude tax. `Auto` uses the end customer's location and applies that region's usual convention.
 
-The MCP product tools take an optional `taxBehavior` with those values. Leave it on `Auto` and do not ask the user to confirm it. Set `Inclusive` or `Exclusive` only when the user explicitly says prices should include or exclude tax.
+On create, `taxBehavior` is optional. Leave it on `Auto` and do not ask the user to confirm it. On both update tools it is required: pass the current value from `get_products` unless the user explicitly asks to change it. Set `Inclusive` or `Exclusive` only when the user explicitly says prices should include or exclude tax.
 
 | The user says | `taxBehavior` |
 |---|---|

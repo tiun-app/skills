@@ -43,7 +43,7 @@ Use a structured question primitive (e.g. `AskQuestion`) if your client supports
 
 - Subscription, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick one or multiple tiers.
 - Subscription, no MCP → ask for `snippetId`; ask one product or multiple tiers; for each, ask `productId` and label; confirm sandbox or live (the `p-test-...` / `p-live-...` prefix is a strong hint).
-- One-time, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick the product(s) to unlock. Do not ask about tiers — one-time products are not tiered. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on; ask, or read those fields when the product payload includes them. For a repeatable product, ask which ID in the app is the `referenceId`.
+- One-time, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick the product(s) to unlock. Do not ask about tiers — one-time products are not tiered. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Read `oneTime.isRepeatable` and `oneTime.expiry` from `get_products`. Ask only when there's no MCP. For a repeatable product, ask which ID in the app is the `referenceId`.
 - One-time, no MCP → ask for `snippetId`; for each product, ask `productId` and label; ask whether Repeat purchases or Limited access is on; for a repeatable product, ask which ID in the app is the `referenceId`; confirm sandbox or live (prefix is a strong hint).
 - Time-based, MCP present → list providers, ask user to pick the environment row.
 - Time-based, no MCP → ask for `snippetId`; confirm sandbox or live.
