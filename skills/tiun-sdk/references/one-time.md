@@ -2,7 +2,7 @@
 
 A one-time product charges a **single fixed fee**. There is no interval, no trial, no renewal, and no cancellation.
 
-Access is **permanent by default**, and each customer can buy the product **once**. Two optional switches on the product change that. Turn them on in the dashboard under **Products** when you create or edit the product:
+Access is **permanent by default**, and each customer can buy the product **once**. Two optional switches on the product change that. Turn them on in the dashboard or through the MCP one-time tools when you create or edit the product:
 
 - **Limited access** — access ends a set time after purchase. Nothing renews.
 - **Repeat purchases** — the customer can buy the product again, once per `referenceId`. The price is charged each time.
