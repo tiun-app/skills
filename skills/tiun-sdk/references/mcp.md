@@ -43,7 +43,7 @@ Each product the MCP reports carries a **`pricingType`** — the only reliable s
 | `'OneTime'` | One-time purchase | `tiun.checkout({ productId })` |
 | `'TimeBased'` | Time-based | `tiun.start()` |
 
-**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: a subscription grants a renewable entitlement that can lapse. A one-time purchase is permanent and bought once per customer **by default**. **Limited access** adds an end date, and **Repeat purchases** allows another purchase per `referenceId`. `pricingType: 'OneTime'` does not tell you whether either is on. Read `oneTime.isRepeatable` and `oneTime.expiry` (`{ interval, intervalCount }` or `null`) from `get_products`. Ask only when there's no MCP. See [one-time.md](one-time.md).
+**The `productId` prefix does not tell you the type** — `p-live-...` / `p-test-...` encode the *environment* only. `Subscription` and `OneTime` share an entry point, so `pricingType` is the only thing that distinguishes them, and the difference matters: a subscription grants a renewable entitlement that can lapse. A one-time purchase is permanent and bought once per customer **by default**. **Limited access** adds an end date, and **Repeat purchases** allows another purchase per `referenceId`. `pricingType: 'OneTime'` does not tell you whether either is on. Read `oneTime.isRepeatable` and `oneTime.expiry` from `get_products`. See [one-time.md](one-time.md).
 
 A product's price arrives in the block matching its pricing type, and each type has its own shape — the MCP documents them, so read the response rather than assuming a field. What matters when you report a price back to the user is that the three are not interchangeable: a one-time fee is charged once, a subscription price recurs on its interval, and a time-based fee is metered usage against a monthly cap. Never present a time-based fee as a subscription price.
 
@@ -53,9 +53,11 @@ The exact call signature is the MCP's to define, but the fields come from the da
 
 | Type | Fields |
 |---|---|
-| **Subscription** | Name (1–36 characters, shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
-| **One-time** | Name (1–36 characters) and price. No interval, no trial. **Repeat purchases** (`isRepeatable`, required on `create_one_time_product` and `update_one_time_product`: buy again, once per `referenceId`; the price is charged each time) and **Limited access** (optional `expiryInterval` + `expiryCount`: `Day` 1–1000, `Week` 1–150, `Month` 1–36, `Year` 1–3; omit both for unlimited access; nothing renews). The two combine. |
-| **Time-based** | Name (1–36 characters), interval **1 minute only**, interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
+| **Subscription** | Name (shown at checkout), interval as a **count + unit** (daily / weekly / monthly / yearly — "every 3 months" is 3 × monthly), price charged at each interval start, and optionally a trial |
+| **One-time** | Name and price. No interval, no trial. Optional switches, set in the dashboard or with the MCP: **Repeat purchases** (buy again, once per `referenceId`; the price is charged each time) and **Limited access** (access ends a count of days, weeks, months, or years after the day of purchase; nothing renews). The two combine. |
+| **Time-based** | Name, interval **1 minute only**, interval fee, and a monthly limit capping charges per calendar month. **Dashboard-only** — the MCP cannot create or edit these |
+
+Names are 1–36 characters.
 
 Two that are easy to get wrong:
 
@@ -64,7 +66,7 @@ Two that are easy to get wrong:
 
 Plus the tax category — required, no default, permanent (above).
 
-**Repeat purchases and Limited access** are `isRepeatable` (required) and an optional `expiryInterval` + `expiryCount` pair on `create_one_time_product` and `update_one_time_product`. `get_products` returns them as `oneTime.isRepeatable` and `oneTime.expiry` (`{ interval, intervalCount }` or `null`). An update replaces those access settings: pass the current `isRepeatable`, and the current expiry as `expiryInterval` and `expiryCount` (`oneTime.expiry.interval` and `oneTime.expiry.intervalCount`). Leaving out both expiry fields clears the expiry.
+On update, the access settings are replaced, so pass the current repeat and expiry values from `get_products`. Leaving out the expiry clears it.
 
 ## Tax behavior
 
