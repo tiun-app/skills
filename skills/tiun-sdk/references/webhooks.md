@@ -1,6 +1,6 @@
 # Webhooks
 
-tiun POSTs to your backend when a user is created, withdraws consent, or gains or loses product access, including while they are not in your app. Use webhooks to keep your own systems in sync. Gate the app with `userChange` and [server-verification.md](server-verification.md), not with the webhook body.
+tiun POSTs to your backend when a user is created, withdraws consent, or gains or loses product access, including while they are not in your app. Most integrations don't need webhooks. Common cases where they make sense: a welcome or post-purchase email, or a top-up balance kept on your server. Gate the app with `userChange` and [server-verification.md](server-verification.md), not with the webhook body.
 
 Upstream: [Receive webhooks](https://docs.tiun.io/guides/webhooks/receive-webhooks), [Events](https://docs.tiun.io/reference/webhooks/events), [Delivery](https://docs.tiun.io/reference/webhooks/delivery).
 

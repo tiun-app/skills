@@ -1,6 +1,6 @@
 # Server-Side Verification
 
-When the integrator's backend serves paid content (paid API endpoints, protected downloads, premium content payloads), verify on the server before returning it. It's the more secure setup: the content stays on the server until access is confirmed, and the server only trusts what tiun's API tells it. Apps without a backend can check access in the browser instead — see [api-reference.md](api-reference.md#products).
+When the integrator's backend serves paid content (paid API endpoints, protected downloads, premium content payloads), verify on the server before returning it. Apps without a backend check access in the browser — see [api-reference.md](api-reference.md#products).
 
 There are three server-side flows:
 
