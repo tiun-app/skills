@@ -66,7 +66,7 @@ On the server, the same `user.productAccess` check applies. See [server-verifica
 
 ## Repeat purchases
 
-Each purchase is tied to a `referenceId` your app already has — an article ID, a booking ID, or an order ID. Use the same ID whenever you mean the same thing.
+Each purchase is tied to a `referenceId`: an ID your app already has (an article or booking ID), or a new one you generate per purchase for top-ups. Use the same ID whenever you mean the same thing.
 
 `referenceId` is **required**. Checkout without it shows a configuration error and charges nothing. Use 1–200 characters: letters (`A–Z`, `a–z`), digits, hyphens (`-`), underscores (`_`), or dots (`.`). No spaces. Anything else shows a configuration error and charges nothing.
 
@@ -84,7 +84,7 @@ The once-per-customer rule applies **per reference ID**. A new reference ID char
 `productAccess` is a list of product IDs. The product ID shows up after the first reference and stays until the last one ends, and it never names which reference was bought, so do not gate a repeatable product with `productAccess.includes(productId)`. Check the product and the reference ID together, in one of two places:
 
 - **In the browser** with `tiun.checkProductAccess(productId, { referenceId })` (`@tiun/sdk` **0.12.0+**, React Native `checkProductAccess` on `useTiun()` **0.5.0+**). No backend needed.
-- **On the server**, a good fit when the integrator already has a backend or wants a more secure setup where the content stays on the server until the purchase is confirmed.
+- **On the server**, when the integrator already has a backend that serves the content.
 
 You can combine them: the browser check for the page, the server check for the content it loads.
 
@@ -118,7 +118,9 @@ Details and response shape: [server-verification.md](server-verification.md#repe
 
 A repeatable product with **Limited access** still uses that URL. `expiresAt` on the access object is the end of that purchase; it is `null` when limited access is off.
 
-To mirror purchases into your own database, handle `product_access.add` and `product_access.remove` and confirm each one with the same API. See [webhooks.md](webhooks.md).
+### Top-ups
+
+Generate a new `referenceId` for each top-up (for example a UUID). Without a backend, count the top-up product's entries in `tiun.listProductAccess()` (`@tiun/sdk` 0.12.0+, React Native 0.5.0+). It lists current access only, and each entry carries its `referenceId`. If your backend tracks usage, keep the balance there instead: add credits on each `product_access.add` for the top-up product, confirmed with the API. See [webhooks.md](webhooks.md).
 
 ## Mixed catalogs
 
