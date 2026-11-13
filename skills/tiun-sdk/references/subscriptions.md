@@ -106,13 +106,13 @@ document.querySelector('#buy-pro').onclick =
   () => tiun.checkout({ productId: TIUN_PRODUCTS.pro });
 ```
 
-Once the user has access to any of them, hide the buy buttons for all of them.
+Once the user has any of these plans, hide the buy buttons for all of them.
 
 ## Gating rules
 
 - **In the app**: `user.productAccess.includes(productId)`, re-checked on every `userChange`, is all a subscription needs. It works without a backend.
 - **Dates on an account page** ("Renews" vs "Ends on"): `tiun.listProductAccess()` or `tiun.checkProductAccess(productId)` (`@tiun/sdk` 0.12.0+). `expiresAt` is `null` while the subscription renews and the end of the paid period once it's cancelled.
-- **On the server**: when the integrator's backend serves the paid content (a paid API, protected downloads), verify there before returning it — the more secure setup. See [server-verification.md](server-verification.md).
+- **On the server**: when the integrator's backend serves the paid content (a paid API, protected downloads), verify there before returning it. See [server-verification.md](server-verification.md).
 
 ## Common mistakes
 
