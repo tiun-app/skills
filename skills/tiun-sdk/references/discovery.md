@@ -26,7 +26,7 @@ Subscription, one-time purchase, time-based, or a combination? Map user language
 
 | User says... | Mode |
 |---|---|
-| "subscription", "recurring", "members", "paid account", "tiers" | Subscription |
+| "subscription", "recurring", "members", "paid account", "plans" | Subscription |
 | "buy once", "pay once", "one-time", "lifetime", "lifetime deal", "single payment", "unlock forever", "fixed fee", "perpetual license", "no subscription" | One-time (permanent, once per customer) |
 | "buy again", "ticket", "booking", "pay per article", "reference ID", "repeat purchases" | One-time, **repeatable** — see [one-time.md](one-time.md) |
 | "expires after", "N-day pass", "limited access" on a purchase that does not renew | One-time, **limited access** |
@@ -40,7 +40,7 @@ Subscription and one-time share an entry point (`tiun.checkout`) and differ in l
 
 Suggested question (when ambiguous):
 
-> Do you want **subscription** access (accounts + recurring billing + per-product tiers, e.g. "$9.99/month for premium videos"), a **one-time purchase** (pay once; access stays unless you turn on limited access, e.g. "€240 for an onboarding package" or a 30-day pass), a **repeatable one-time purchase** (the same product again, once per article or booking), or **time-based** access (anonymous per-session metering, e.g. "watch any video, billed per minute up to a monthly cap")? Or a combination?
+> Do you want **subscription** access (accounts + recurring billing, e.g. "$9.99/month for premium videos"), a **one-time purchase** (pay once; access stays unless you turn on limited access, e.g. "€240 for an onboarding package" or a 30-day pass), a **repeatable one-time purchase** (the same product again, once per article or booking), or **time-based** access (anonymous per-session metering, e.g. "watch any video, billed per minute up to a monthly cap")? Or a combination?
 
 ## 0c. Identifiers
 
@@ -64,20 +64,20 @@ Confirm with the user *which* environment you're wiring — if both exist, defau
 ### Subscription, MCP present
 
 1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
-2. List products for the chosen provider and environment → ask user to pick one or multiple tiers. Suggest: "for multiple tiers, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-live-basic', pro: 'p-live-pro' }`."
+2. List products for the chosen provider and environment → ask user to pick one or several plans. Suggest: "for several plans, I'll set up a `TIUN_PRODUCTS` map like `{ basic: 'p-live-basic', pro: 'p-live-pro' }`."
 3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### Subscription, no MCP
 
 1. Ask for `snippetId` (from `my.tiun.business`).
-2. Ask: one product or multiple tiers?
-3. For each tier: ask the `productId` and a label (e.g. `pro = p-live-pro`).
+2. Ask: one product or several plans?
+3. For each plan: ask the `productId` and a label (e.g. `pro = p-live-pro`).
 4. Ask which environment (live or sandbox). The product-ID prefix is a strong hint — `p-test-...` ⇒ sandbox, `p-live-...` ⇒ live.
 
 ### One-time, MCP present
 
 1. List providers → ask user to pick the environment row. The same `providerId` has one row per environment.
-2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about tiers** — one-time products are not tiered. If the catalog mixes one-time and subscription products, confirm which the user means. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Read `oneTime.isRepeatable` and `oneTime.expiry` from `get_products`. For a repeatable product, ask which ID in the app is the `referenceId`, and whether the project has a backend that serves the content (check on the server) or should check in the browser with `tiun.checkProductAccess()` (`@tiun/sdk` 0.12.0+).
+2. List products for the chosen provider and environment → ask which product(s) to unlock. **Do not ask about plans.** If the catalog mixes one-time and subscription products, confirm which the user means. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Read `oneTime.isRepeatable` and `oneTime.expiry` from `get_products`. For a repeatable product, ask which ID in the app is the `referenceId`, and whether the project has a backend that serves the content (check on the server) or should check in the browser with `tiun.checkProductAccess()` (`@tiun/sdk` 0.12.0+).
 3. Confirm sandbox or live; default to the sandbox row if both exist and the context is local dev.
 
 ### One-time, no MCP
@@ -103,10 +103,10 @@ When MCP is present, ground questions in inventory:
 ## 0d. Gating scope
 
 - Which routes / components / features should require access? (Free-form, or multi-select if you've explored the routes file.)
-- What should signed-out users see, and how does the app's journey start? (Offering or pricing page where visitors choose a plan / account-first app where users sign in before meeting an upgrade / full-screen paywall overlay / teaser + subscribe button.) Keep the journey the app is built for — see [subscriptions.md](subscriptions.md#choosing-checkout-or-login).
-- What should authenticated-but-no-access users see? (Usually the same UX with "upgrade" copy)
+- What should signed-out users see, and how does the app's journey start? (Offering or pricing page where visitors choose a plan / account-first app where users sign in before meeting a paywall / full-screen paywall overlay / teaser + subscribe button.) Keep the journey the app is built for — see [subscriptions.md](subscriptions.md#choosing-checkout-or-login).
+- What should authenticated-but-no-access users see? (Usually the same UX with "subscribe" copy)
 - Is there a free preview? (e.g. first 30 seconds of video, first paragraph of article) — if yes, the user may actually want **time-based**; feed back into 0b.
-- For multi-tier: which routes/features map to which tier?
+- For several plans: which routes/features map to which plan?
 
 ## "Ask only what's missing"
 

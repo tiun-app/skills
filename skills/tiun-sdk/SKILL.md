@@ -41,9 +41,9 @@ Use a structured question primitive (e.g. `AskQuestion`) if your client supports
 
 **0c. Gather identifiers.** Questions depend on mode and MCP availability. The MCP returns one row per environment for the same `providerId` — a sandbox row and a live row are the same provider.
 
-- Subscription, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick one or multiple tiers.
-- Subscription, no MCP → ask for `snippetId`; ask one product or multiple tiers; for each, ask `productId` and label; confirm sandbox or live (the `p-test-...` / `p-live-...` prefix is a strong hint).
-- One-time, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick the product(s) to unlock. Do not ask about tiers — one-time products are not tiered. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Read `oneTime.isRepeatable` and `oneTime.expiry` from `get_products`. For a repeatable product, ask which ID in the app is the `referenceId`.
+- Subscription, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick one or several plans.
+- Subscription, no MCP → ask for `snippetId`; ask one product or several plans; for each, ask `productId` and label; confirm sandbox or live (the `p-test-...` / `p-live-...` prefix is a strong hint).
+- One-time, MCP present → list providers, ask user to pick the environment row; list products, ask user to pick the product(s) to unlock. Do not ask about plans. `pricingType: 'OneTime'` does not say whether **Repeat purchases** or **Limited access** is on. Read `oneTime.isRepeatable` and `oneTime.expiry` from `get_products`. For a repeatable product, ask which ID in the app is the `referenceId`.
 - One-time, no MCP → ask for `snippetId`; for each product, ask `productId` and label; ask whether Repeat purchases or Limited access is on; for a repeatable product, ask which ID in the app is the `referenceId`; confirm sandbox or live (prefix is a strong hint).
 - Time-based, MCP present → list providers, ask user to pick the environment row.
 - Time-based, no MCP → ask for `snippetId`; confirm sandbox or live.
@@ -53,10 +53,10 @@ When the MCP is present, ground questions in inventory ("you have a sandbox time
 **0d. Identify what to gate.** Without this step the agent is generating boilerplate with no target. Ask:
 
 - Which routes/components/features require access?
-- What should signed-out users see, and how does the app's journey start? (offering or pricing page / account-first app where users sign in before meeting an upgrade / full-screen paywall / teaser + subscribe). Keep the journey the app is built for.
-- What should authenticated-but-no-access users see? (typically the same UX with "upgrade" copy)
+- What should signed-out users see, and how does the app's journey start? (offering or pricing page / account-first app where users sign in before meeting a paywall / full-screen paywall / teaser + subscribe). Keep the journey the app is built for.
+- What should authenticated-but-no-access users see? (typically the same UX with "subscribe" copy)
 - Is there a free preview? (If yes, this is often a cue the user actually wants **time-based**, not subscription — feed back into 0b.)
-- For multi-tier: which routes/features map to which tier?
+- For several plans: which routes/features map to which plan?
 
 ## When to do what
 
@@ -123,7 +123,7 @@ Full per-mode walkthroughs in [references/subscriptions.md](references/subscript
 
 ## Decision cues
 
-- User says "subscription", "recurring", "members", "paid account", "products and tiers" → **subscription flow**. Route to subscriptions.md.
+- User says "subscription", "recurring", "members", "paid account", "products and plans" → **subscription flow**. Route to subscriptions.md.
 - User says "buy once", "pay once", "one-time", "lifetime", "lifetime deal", "single payment", "unlock forever", "fixed fee", "perpetual license", "no subscription" → **one-time flow** (permanent, once per customer, unless they also want an end date or repeat purchases). Route to one-time.md.
 - User says "buy again", "ticket", "booking", "pay per article", "reference ID", "repeat purchases" → **repeatable one-time**. Pass `referenceId` at checkout (`@tiun/sdk` 0.11.0+ or `@tiun/react-native-sdk` 0.4.0+) and check that reference with `tiun.checkProductAccess(productId, { referenceId })` (`@tiun/sdk` 0.12.0+), or on the server when there's a backend. Route to one-time.md.
 - User says "access for N days", "pass expires", "limited access" on a one-time product → **one-time with limited access**. The product ID leaves `productAccess` at the end date. Nothing renews. Route to one-time.md.

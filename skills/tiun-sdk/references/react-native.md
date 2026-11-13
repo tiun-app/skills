@@ -213,15 +213,15 @@ Prefer reading `user` from `useTiun()` for rendering; use `useTiunEvent('userCha
 
 ## Gating
 
-`user.productAccess` is the source of truth. Derive the tier in one place:
+`user.productAccess` is the source of truth. Derive the plan in one place:
 
 ```tsx
 import { useTiun } from '@tiun/react-native-sdk';
 import { TIUN_PRODUCTS } from './tiun';
 
-type Tier = 'free' | 'light' | 'pro';
+type Plan = 'free' | 'light' | 'pro';
 
-export function useTier(): Tier {
+export function usePlan(): Plan {
   const { user } = useTiun();
   const access = user?.productAccess ?? [];
 

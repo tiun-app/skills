@@ -69,7 +69,7 @@ JWTs returned by `tiun.getUserVerificationToken()` are valid for **5 minutes**. 
 
 ### Multiple plans
 
-If you offer tiers, check from the highest applicable tier down:
+If you offer several plans, check from the highest plan down:
 
 ```javascript
 // `user` is the `user` object from the v2 verification response
@@ -81,7 +81,7 @@ if (hasPro) {
 } else if (hasLight) {
   // serve Light content
 } else {
-  // no qualifying subscription → reject (prompt upgrade)
+  // no qualifying subscription → reject (show plans)
 }
 ```
 
