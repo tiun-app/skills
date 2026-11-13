@@ -35,25 +35,20 @@ document.querySelector('#buy').onclick =
 
 Leave `referenceId` off checkout unless the product has **Repeat purchases** turned on. Passing it on any other product — a subscription, a time-based product, or a one-time product with the switch off — shows a configuration error and charges nothing.
 
-## What's different from a subscription
+## Picking the setup
 
-| | Subscription | One-time, default | Limited access | Repeat purchases |
-|---|---|---|---|---|
-| Charge | Recurring fee + interval | Fixed fee, once | Fixed fee, once | Fixed fee, each purchase |
-| Trial | Optional | None | None | None |
-| After payment | Renews until it ends | Stays in `productAccess` | Leaves `productAccess` at the end date | Checked per `referenceId` with `checkProductAccess()` or on the server |
-| Cancel | Yes | No | No | No |
-| Buy again | After it ends | Never | After access ends | Once per `referenceId` |
-| Tiers | Yes | No | No | No |
+Choose by what is sold:
 
-## Bought once per customer
+- **Lifetime access** (an app or SaaS tool, a pro mode, a course, a license): the default. The customer pays once and keeps access.
+- **Access for a set time, one per product** (a weekly pass to a tool): turn on limited access. The product ID is enough, and the customer can buy again once it ends.
+- **Many items at one price** (top-ups, articles, tickets): turn on repeat purchases and pass a `referenceId` per item.
+- **Renting one of many items** (a movie or an article for a day): repeat purchases plus limited access, with a `referenceId` per item.
 
-While the customer has access, tiun blocks a second purchase before any money moves:
+Unlike a subscription, there's no trial, no renewal, and nothing to cancel.
 
-- **Signed in and already entitled** — checkout links the existing entitlement and shows an "already purchased, no new charge was made" screen.
-- **Signed out** — checkout signs the customer in. Once it recognizes them as the owner, it shows the same screen. Nothing is charged.
+## After the purchase
 
-Hide or disable the buy button once `productAccess` contains the product ID. Give returning customers a sign-in entry point (`tiun.login()`). Checkout will not hand them the content.
+Give the customer what they bought: unlock the content as soon as `productAccess` (or `checkProductAccess()` for a `referenceId`) shows it, and swap the buy button for it. Checkout won't charge twice for something they still have access to. A returning customer who opens it is signed in and sees "already purchased".
 
 Copy for this product: "Buy", "Purchased", "You own this". There is no "Subscribe", "Manage your plan", "Renews on", or "Cancel".
 
@@ -63,15 +58,15 @@ You cannot cancel a one-time purchase, so you cannot reset it for a test custome
 
 ## Limited access
 
-**Limited access** ends access a count of **days, weeks, months, or years** after the day of purchase. When that date is reached, tiun removes the product ID from `productAccess` and fires `userChange`. Nothing starts a new period. After it ends, they can buy it again.
+**Limited access** ends access a count of **days, weeks, months, or years** after the day of purchase. When that date is reached, tiun removes the product ID from `productAccess` and fires `userChange`. Nothing starts a new period.
 
-Gate the same way as the default product: `productAccess.includes(productId)` is true until the end date and false after it. Do not add a renewal job, a cancel action, or a trial.
+Gate the same way as the default product: `productAccess.includes(productId)` is true until the end date and false after it.
 
 On the server, the same `user.productAccess` check applies. See [server-verification.md](server-verification.md).
 
 ## Repeat purchases
 
-Turn on **Repeat purchases** for articles, bookings, tickets, reports, and anything the same customer buys more than once. Each purchase is tied to a `referenceId` your app already has — an article ID, a booking ID, or an order ID. Use the same ID whenever you mean the same thing.
+Each purchase is tied to a `referenceId` your app already has — an article ID, a booking ID, or an order ID. Use the same ID whenever you mean the same thing.
 
 `referenceId` is **required**. Checkout without it shows a configuration error and charges nothing. Use 1–200 characters: letters (`A–Z`, `a–z`), digits, hyphens (`-`), underscores (`_`), or dots (`.`). No spaces. Anything else shows a configuration error and charges nothing.
 
@@ -157,7 +152,6 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 - **A `referenceId` outside the allowed characters above.**
 - **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
 - **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
-- **Leaving the buy button up while the customer has access** to that product or reference ID. Checkout will not charge again.
 - **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Trials are subscription-only. Limited access removes the ID when the period ends; it does not renew.
 - **Quantity selectors, carts, or credit packs.** Repeat purchases are another `referenceId`, not a quantity.
 - **Subscription copy.** Use "Buy" / "Purchased" / "You own this".

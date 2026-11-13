@@ -84,9 +84,9 @@ tiun.on('userChange', ({ event, isAuthenticated, user }) => {
 
 Use `userId` if your backend needs a stable identifier across sessions, and `productAccess` for client-side gating.
 
-## Multi-tier products
+## Several subscriptions side by side
 
-Real apps usually have more than one product. Use a const map so productIds are typed and discoverable:
+Apps often offer more than one subscription. Use a const map so productIds are typed and discoverable:
 
 ```javascript
 const TIUN_PRODUCTS = {
@@ -99,12 +99,14 @@ tiun.on('userChange', ({ isAuthenticated, user }) => {
 
   if (user.productAccess.includes(TIUN_PRODUCTS.pro))   return showProUI();
   if (user.productAccess.includes(TIUN_PRODUCTS.basic)) return showBasicUI();
-  return showUpgradePrompt();
+  return showPlans();
 });
 
 document.querySelector('#buy-pro').onclick =
   () => tiun.checkout({ productId: TIUN_PRODUCTS.pro });
 ```
+
+Once the user has access to any of them, hide the buy buttons for all of them.
 
 ## Gating rules
 
@@ -115,7 +117,7 @@ document.querySelector('#buy-pro').onclick =
 ## Common mistakes
 
 - **Wrapping `tiun.checkout` / `tiun.login` in helper functions that re-check `isInitialized` and `await waitForReady`.** These methods already do both internally. Call them directly from your event handler.
-- **Reading `tiun.user` once at mount.** Subscription entitlements can change mid-session (upgrade, downgrade, renewal). Use `userChange` as the source of truth, not a one-shot read.
+- **Reading `tiun.user` once at mount.** Subscription entitlements can change mid-session (renewal, a new purchase, access ending). Use `userChange` as the source of truth, not a one-shot read.
 - **Applying this file's renewal/cancellation handling to a one-time product.** One-time products do not renew or cancel. Limited access and repeat purchases are in [one-time.md](one-time.md).
 - **Opening login from a purchase action.** See [Choosing checkout or login](#choosing-checkout-or-login).
 - **Building custom payment forms.** The checkout overlay is hosted by tiun; do not reimplement card collection.
