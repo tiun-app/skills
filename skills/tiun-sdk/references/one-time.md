@@ -120,7 +120,7 @@ A repeatable product with **Limited access** still uses that URL. `expiresAt` on
 
 ### Top-ups
 
-Generate a new `referenceId` for each top-up (for example a UUID). Without a backend, count the top-up product's entries in `tiun.listProductAccess()` (`@tiun/sdk` 0.12.0+, React Native 0.5.0+). It lists current access only, and each entry carries its `referenceId`. If your backend tracks usage, keep the balance there instead: add credits on each `product_access.add` for the top-up product, confirmed with the API. See [webhooks.md](webhooks.md).
+Generate a new `referenceId` for each top-up (for example a UUID). A balance that goes down as credits are used needs your backend: on each `product_access.add` for the top-up product, confirm it with the API and add the credits once per `referenceId`. See [webhooks.md](webhooks.md).
 
 ## Mixed catalogs
 

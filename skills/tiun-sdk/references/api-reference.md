@@ -119,4 +119,4 @@ interface TiunUser {
 }
 ```
 
-Use `user.productAccess.includes(productId)` to gate a subscription tier or a non-repeatable one-time purchase (including limited access, whose ID leaves the array at the end date). A repeatable one-time product is checked per `referenceId` with `tiun.checkProductAccess()` or on the server — see [one-time.md](one-time.md). The prefix tells you the **environment**, not the product type: `p-live-...` for live, `p-test-...` for sandbox.
+Use `user.productAccess.includes(productId)` to gate a subscription plan or a non-repeatable one-time purchase (including limited access, whose ID leaves the array at the end date). A repeatable one-time product is checked per `referenceId` with `tiun.checkProductAccess()` or on the server — see [one-time.md](one-time.md). The prefix tells you the **environment**, not the product type: `p-live-...` for live, `p-test-...` for sandbox.

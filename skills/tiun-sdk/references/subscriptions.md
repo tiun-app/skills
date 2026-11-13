@@ -8,7 +8,7 @@ If you arrived here without first doing Step 0 in [../SKILL.md](../SKILL.md), go
 
 1. Create subscription products in the dashboard. Each has a `productId` (`p-live-...` for live, `p-test-...` for sandbox).
 2. `tiun.init({ snippetId, language: 'en' })` on app start.
-3. Bind checkout to each purchase action — a plan's button, an upgrade prompt, wherever the user chooses a product:
+3. Bind checkout to each purchase action — a plan's button, a subscribe prompt, wherever the user chooses a product:
 
    ```javascript
    tiun.checkout({ productId: 'p-live-pro' });
@@ -43,7 +43,7 @@ Choose by the action's purpose, not its label. "Get started" on a plan card is a
 Both of these journeys are valid. Follow the one the app is built for:
 
 - **Purchase-first.** Visitors see an offering or pricing page and choose a plan; the plan's button opens checkout. The app also has a conventional sign-in entry point for returning users.
-- **Account-first.** Users sign up or sign in to use the app — a free tier, a workspace — and meet a paid offer later; the upgrade button opens checkout. Keep this structure rather than redesigning it into a public pricing funnel.
+- **Account-first.** Users sign up or sign in to use the app — a free plan, a workspace — and meet a paid offer later; the subscribe button opens checkout. Keep this structure rather than redesigning it into a public pricing funnel.
 
 The line is between authentication as the way *into the app*, which is fine, and authentication inserted *into a purchase action*. That second one is the mistake to avoid: a visitor clicks "Buy" and the app opens a separate login instead of checkout — for example, a purchase handler that picks `tiun.login()` or `tiun.checkout()` based on `tiun.isAuthenticated`, or that waits for a standalone login before opening checkout. The purchase action should open checkout for the selected product.
 
@@ -106,13 +106,13 @@ document.querySelector('#buy-pro').onclick =
   () => tiun.checkout({ productId: TIUN_PRODUCTS.pro });
 ```
 
-Once the user has access to any of them, hide the buy buttons for all of them.
+Once the user has any of these plans, hide the buy buttons for all of them.
 
 ## Gating rules
 
 - **In the app**: `user.productAccess.includes(productId)`, re-checked on every `userChange`, is all a subscription needs. It works without a backend.
 - **Dates on an account page** ("Renews" vs "Ends on"): `tiun.listProductAccess()` or `tiun.checkProductAccess(productId)` (`@tiun/sdk` 0.12.0+). `expiresAt` is `null` while the subscription renews and the end of the paid period once it's cancelled.
-- **On the server**: when the integrator's backend serves the paid content (a paid API, protected downloads), verify there before returning it — the more secure setup. See [server-verification.md](server-verification.md).
+- **On the server**: when the integrator's backend serves the paid content (a paid API, protected downloads), verify there before returning it. See [server-verification.md](server-verification.md).
 
 ## Common mistakes
 

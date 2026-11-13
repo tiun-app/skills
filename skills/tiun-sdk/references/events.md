@@ -65,7 +65,7 @@ tiun.waitForReady().then(syncStateFromTiun);
 tiun.on('userChange', ({ isAuthenticated, user }) => {
   if (!isAuthenticated) return showSignedOutUI(); // whatever your app shows signed-out visitors
   if (user.productAccess.includes('p-live-pro')) return showProContent();
-  return showUpgradePrompt();
+  return showPlans();
 });
 ```
 
