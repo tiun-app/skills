@@ -117,7 +117,7 @@ Once the user has any of these plans, hide the buy buttons for all of them.
 ## Common mistakes
 
 - **Wrapping `tiun.checkout` / `tiun.login` in helper functions that re-check `isInitialized` and `await waitForReady`.** These methods already do both internally. Call them directly from your event handler.
-- **Reading `tiun.user` once at mount.** Subscription entitlements can change mid-session (renewal, a new purchase, access ending). Use `userChange` as the source of truth, not a one-shot read.
+- **Reading `tiun.user` once at mount.** Subscription entitlements can change mid-session (renewal, a new purchase). Use `userChange` as the source of truth, not a one-shot read. Ended access shows up on the next refresh (page load or another tab).
 - **Applying this file's renewal/cancellation handling to a one-time product.** One-time products do not renew or cancel. Limited access and repeat purchases are in [one-time.md](one-time.md).
 - **Opening login from a purchase action.** See [Choosing checkout or login](#choosing-checkout-or-login).
 - **Building custom payment forms.** The checkout overlay is hosted by tiun; do not reimplement card collection.
