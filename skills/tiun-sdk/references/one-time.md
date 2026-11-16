@@ -58,7 +58,7 @@ You cannot cancel a one-time purchase, so you cannot reset it for a test custome
 
 ## Limited access
 
-**Limited access** ends access a count of **days, weeks, months, or years** after the day of purchase. When that date is reached, tiun removes the product ID from `productAccess` and fires `userChange`. Nothing starts a new period.
+**Limited access** ends access a count of **days, weeks, months, or years** after the day of purchase. When that date is reached, tiun removes the product ID from `productAccess`. Nothing starts a new period.
 
 Gate the same way as the default product: `productAccess.includes(productId)` is true until the end date and false after it.
 
@@ -153,7 +153,7 @@ A repeatable product does not belong in this `productAccess` check. Check the re
 - **Passing `referenceId` on a product that is not repeatable.** Checkout stops with a configuration error. Omit it for subscriptions, time-based products, and one-time products with Repeat purchases off.
 - **A `referenceId` outside the allowed characters above.**
 - **Checking each item of a list separately.** Use one `tiun.listProductAccess()` call and match `referenceId`s.
-- **Re-checking only after a checkout.** Re-check on every `userChange`, so login, logout, and access that ends are covered too.
+- **Re-checking only after a checkout.** Re-check on every `userChange`, so login and logout are covered too. Ended access shows up on the next refresh (page load or another tab).
 - **Generating renewal, cancellation, or trial handling.** None of those exist on a one-time product. Trials are subscription-only. Limited access removes the ID when the period ends; it does not renew.
 - **Quantity selectors, carts, or credit packs.** Repeat purchases are another `referenceId`, not a quantity.
 - **Subscription copy.** Use "Buy" / "Purchased" / "You own this".

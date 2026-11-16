@@ -26,11 +26,13 @@ The `event` field tells you what triggered the fire:
 
 `'checkout'` fires whenever access changes:
 
-- a completed purchase, a subscription that ends, or a limited-access one-time purchase reaching its end date;
+- a completed purchase;
 - a repeatable product bought with a new reference ID; `productAccess` does not name it;
 - access that changed in another tab, once this tab is visible again.
 
-**Rule: re-check access on every `userChange`.** Read `user.productAccess` for subscriptions and one-time products; call `tiun.checkProductAccess(productId, { referenceId })` for a repeatable product (or `tiun.listProductAccess()` for a "My purchases" list). Branch on `event` only for one-off side effects (e.g. a "Welcome!" toast on `'login'` but not on `'init'`). For a post-purchase message on `'checkout'`, check that access was gained, since `'checkout'` also fires when access ends.
+Ended access shows up on the next refresh (page load or another tab).
+
+**Rule: re-check access on every `userChange`.** Read `user.productAccess` for subscriptions and one-time products; call `tiun.checkProductAccess(productId, { referenceId })` for a repeatable product (or `tiun.listProductAccess()` for a "My purchases" list). Branch on `event` only for one-off side effects (e.g. a "Welcome!" toast on `'login'` but not on `'init'`). For a post-purchase message on `'checkout'`, check that access was gained.
 
 In React Native, the payload has `event` from `@tiun/react-native-sdk` 0.5.0; before that, use the separate `login` / `logout` events.
 
