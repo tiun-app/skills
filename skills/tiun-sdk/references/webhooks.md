@@ -37,7 +37,7 @@ One event is one `POST` with a JSON body. There is no signature.
 
 | Field | Meaning |
 |---|---|
-| `id` | Stable across retries and dashboard resends. Don't rely on it alone to skip repeats; the API check and repeat-safe writes are the protection. |
+| `id` | Stable across retries and dashboard resends. |
 | `type` | One of the four types below. |
 | `version` | Event format version. Currently always `1`. |
 | `occurred_at` | When it happened, ISO 8601 UTC. |
