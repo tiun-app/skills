@@ -37,7 +37,7 @@ One event is one `POST` with a JSON body. There is no signature.
 
 | Field | Meaning |
 |---|---|
-| `id` | Fresh per event, so the API check and repeat-safe writes are the protection. |
+| `id` | Stable across retries and dashboard resends. Don't rely on it alone to skip repeats; the API check and repeat-safe writes are the protection. |
 | `type` | One of the four types below. |
 | `version` | Event format version. Currently always `1`. |
 | `occurred_at` | When it happened, ISO 8601 UTC. |
@@ -83,6 +83,6 @@ Do not grant access, revoke access, or change stored data from the webhook body 
 
 A delivery gets up to **10 attempts** (the first, then retries) spread over about **48 hours**. If none returns `2xx`, the delivery is **Failed** and tiun stops. Dashboard statuses: **Scheduled**, **Retrying**, **Succeeded**, **Failed**, **Cancelled**.
 
-Resending a delivery from the dashboard sends that event again. A test event, sent from the endpoint in the dashboard, is a sample payload for checking the handler without a real purchase. You cannot send a test event to a paused endpoint.
+Resending a delivery from the dashboard sends that same event again, with the same `id`. A test event, sent from the endpoint in the dashboard, is a sample payload for checking the handler without a real purchase. You cannot send a test event to a paused endpoint.
 
 Do not invent event types, signature headers, or payload fields.
