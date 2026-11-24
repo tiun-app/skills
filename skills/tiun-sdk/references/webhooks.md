@@ -50,7 +50,7 @@ IDs belong to the endpoint's environment.
 | `type` | When it is sent | `payload` |
 |---|---|---|
 | `user.create` | The user signs up with you, usually at sign-in or checkout. | `user_id` |
-| `user.revoke_consent` | The user revokes consent to your terms (`hasNewsletterOptIn`). | `user_id` |
+| `user.revoke_consent` | The user revokes their newsletter opt-in (`hasNewsletterOptIn`). | `user_id` |
 | `product_access.add` | The user gains access: a completed one-time purchase, each purchase of a repeatable product, or a subscription start. Subscription renewals do not send it again. | `user_id`, `product_id`, `reference` |
 | `product_access.remove` | The user loses access: a subscription ended after cancellation or a permanent payment failure, or a one-time product with limited access reached its end date. | `user_id`, `product_id`, `reference` |
 
