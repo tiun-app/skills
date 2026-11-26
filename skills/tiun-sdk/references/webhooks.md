@@ -1,6 +1,6 @@
 # Webhooks
 
-tiun POSTs to your backend when a user is created, changes their newsletter opt-in, or gains or loses product access, including while they are not in your app. Many cases are solved with a just-in-time product access check (`userChange` and [server-verification.md](server-verification.md)). Webhooks are a good fit for things like instruction emails for new users, post-purchase email flows (tiun already sends receipts and login warnings), or server-side credits such as repeatable top-ups.
+tiun POSTs to your backend when a user is created, revokes their newsletter opt-in, or gains or loses product access, including while they are not in your app. Many cases are solved with a just-in-time product access check (`userChange` and [server-verification.md](server-verification.md)). Webhooks are a good fit for things like instruction emails for new users, post-purchase email flows (tiun already sends receipts and login warnings), or server-side credits such as repeatable top-ups.
 
 Upstream: [Receive webhooks](https://docs.tiun.io/guides/webhooks/receive-webhooks), [Events](https://docs.tiun.io/reference/webhooks/events), [Delivery](https://docs.tiun.io/reference/webhooks/delivery).
 
