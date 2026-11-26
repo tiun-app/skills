@@ -1,6 +1,6 @@
 # Webhooks
 
-tiun POSTs to your backend when a user is created, withdraws consent, or gains or loses product access, including while they are not in your app. Most integrations don't need webhooks. Common cases where they make sense: a welcome or post-purchase email, or a top-up balance kept on your server. Gate the app with `userChange` and [server-verification.md](server-verification.md), not with the webhook body.
+tiun POSTs to your backend when a user is created, changes their newsletter opt-in, or gains or loses product access, including while they are not in your app. Many cases are solved with a just-in-time product access check (`userChange` and [server-verification.md](server-verification.md)). Webhooks are a good fit for things like instruction emails for new users, post-purchase email flows (tiun already sends receipts and login warnings), or server-side credits such as repeatable top-ups.
 
 Upstream: [Receive webhooks](https://docs.tiun.io/guides/webhooks/receive-webhooks), [Events](https://docs.tiun.io/reference/webhooks/events), [Delivery](https://docs.tiun.io/reference/webhooks/delivery).
 
@@ -50,7 +50,7 @@ IDs belong to the endpoint's environment.
 | `type` | When it is sent | `payload` |
 |---|---|---|
 | `user.create` | The user signs up with you, usually at sign-in or checkout. | `user_id` |
-| `user.revoke_consent` | The user withdraws consent to your terms. | `user_id` |
+| `user.revoke_consent` | The user revokes their newsletter opt-in (`hasNewsletterOptIn`). | `user_id` |
 | `product_access.add` | The user gains access: a completed one-time purchase, each purchase of a repeatable product, or a subscription start. Subscription renewals do not send it again. | `user_id`, `product_id`, `reference` |
 | `product_access.remove` | The user loses access: a subscription ended after cancellation or a permanent payment failure, or a one-time product with limited access reached its end date. | `user_id`, `product_id`, `reference` |
 
@@ -58,15 +58,15 @@ IDs belong to the endpoint's environment.
 
 ## What the handler does
 
-1. Reply with any `2xx` within 15 seconds, then do the slow work. A `4xx`, a `5xx`, a timeout, or a connection failure is retried.
-2. Skip an `id` you have already handled.
-3. Read current state from tiun and act on that response.
+1. Load the current state from tiun with the payload IDs.
+2. Update your systems from that response. Repeated deliveries must not double-apply (credit a top-up once per `referenceId`, send one welcome email per user).
+3. Reply with any `2xx` when done. Errors and timeouts (15 seconds) are retried, up to 10 attempts over about 48 hours.
 
 | Payload | Confirm with |
 |---|---|
 | `reference` is `null` | `GET /live_api/s2s/v1/users/{userId}/info` — use `email`, `hasNewsletterOptIn`, and `productAccess` |
 | `reference` is set | `GET /live_api/s2s/v1/users/{userId}/product_access/{productId}?referenceId={reference}` |
-| `user.revoke_consent` | Remove or anonymize data you hold for that `user_id`. Delete only users already in your database. |
+| `user.revoke_consent` | Load the user from UserInfo (`GET /live_api/s2s/v1/users/{userId}/info`) and update the stored opt-in (`hasNewsletterOptIn`). |
 
 A `404` from those calls means there is nothing to sync. Test events use sample IDs such as `user-sample-0001`.
 
